@@ -76,7 +76,7 @@ class Simple17(Strategy):
     def run(self, player=None, players=None, dealer=None):
         return player.hand_value() < 17
 ```
-Here we create a strategy in which the player hits if the dealer has an ace, and their hand value is below 17.
+Here we create a strategy in which the player hits if the dealer has an ace, and their hand value is below 17. If the dealer doesn't have an ace, the player will hit if the value of their hand is below 16.
 
 ```python
 from src.blackjack.player import Strategy, Player, Dealer
