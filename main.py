@@ -1,17 +1,28 @@
-from escprint import esc
-from src.blackjack.deck import Deck, Card
-from src.blackjack.game import Game, Player
+from src.blackjack.player import Strategy, Player, Dealer
+from src.blackjack.game import AutoGame
 
-if __name__ == "__main__":
-    esc.erase_screen()
-    esc.cursor_to_top()
-    deck = Deck(shuffle=True, num_decks=8)
+class NeverHit(Strategy):
+    # include these arguments even if you're not using them
+    def run(self, player=None, players=None, dealer=None):
+        return False
     
-    players = [
-        Player("Mike"),
-        Player("Daniel")
-    ]
+class Simple17(Strategy):
+    def run(self, player=None, players=None, dealer=None):
+        return player.hand_value() < 18
+    
+class DealerAce(Strategy):
+    # include these arguments even if you're not using them
+    def run(self, player=None, players=None, dealer=None):
+        if dealer.showing() == 11 and player.hand_value() < 17:
+            return True
+        else:
+            return player.hand_value() < 16
 
-    game = Game(players=players, deck=deck)
+players = [
+    Player("Mike", strategy=Simple17()),
+    Player("Daniel", strategy=NeverHit())
+]
 
-    game.start()
+auto_game = AutoGame(players=players)
+# auto_game = AutoGame.create(["Mike", "Dan", "John"])
+results = auto_game.simulate(n_times=1000000)

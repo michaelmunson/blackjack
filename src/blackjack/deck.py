@@ -1,9 +1,16 @@
 import random
 
 class Card:
+    SYM_MAP = {
+        "hearts" : "❤️",
+        "spades" : "♠︎",
+        "diamonds" : "♦️",
+        "clubs" : "♣︎"
+    }
+
     def __init__(self, rank:str, suit:str) -> None:
         self.rank = rank
-        self.suit = suit
+        self.suit = self.SYM_MAP[suit.lower()] if suit.lower() in self.SYM_MAP else suit
         if rank.isdigit():
             self.value = int(rank)
         elif rank == "Ace":
@@ -12,12 +19,13 @@ class Card:
             self.value = 10
     
     def to_str(self):
-        return f"{self.rank} of {self.suit}"
-
+        return f"{self.rank} {self.suit}"
+    
 class Deck(list):
     def __init__(self, num_decks:int=1, shuffle:bool=False):
         self.num_decks = num_decks
-        self.reset(shuffle=shuffle, num_decks=num_decks)
+        self.is_shuffle = shuffle
+        self.reset()
     # shuffle deck
     def shuffle(self):
         random.shuffle(self)
@@ -27,13 +35,14 @@ class Deck(list):
             return None
         return self.pop()
     # reset deck
-    def reset(self, shuffle:bool=False, num_decks:int=1):
+    def reset(self):
         self.clear()
-        for i in range(num_decks):
+        for i in range(self.num_decks):
             self += [Card(rank, suit)
                     for rank in ['Ace', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'Jack', 'Queen', 'King']
-                    for suit in ['Hearts', 'Diamonds', 'Clubs', 'Spades']]
-        if shuffle:
+                    for suit in ['❤️', '♦️', '♣︎', '♠︎']]
+                    # for suit in ['Hearts', 'Diamonds', 'Clubs', 'Spades']]
+        if self.shuffle:
             self.shuffle()
 
     def card_str_list(self):
