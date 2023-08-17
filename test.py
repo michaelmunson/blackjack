@@ -1,6 +1,6 @@
 from src.blackjack.game import Game, Simple, Player, Dealer, AutoGame
 from src.blackjack.deck import Deck, Card
-from src.blackjack.player import Simple
+from src.blackjack.player import Simple, Simple17
 
 def test_game():
     game = Game.create([
@@ -41,8 +41,8 @@ def test_auto_game():
 
 def test_simulate(n_times:int=10, print_sim:bool=False, wait:float|int=.1):
     players = [
-        Player("Mike", strategy=Simple()),
-        Player("Daniel", strategy=Simple())
+        Player("Simple", strategy=Simple()),
+        Player("Simple17", strategy=Simple17())
     ]
 
     auto_game = AutoGame(players=players)
@@ -50,6 +50,6 @@ def test_simulate(n_times:int=10, print_sim:bool=False, wait:float|int=.1):
     results = auto_game.simulate(n_times=n_times, print_sim=print_sim, wait=wait)
 
 if __name__ == "__main__":
-    test_game()
-    # test_simulate(n_times=10000, print_sim=True, wait=.00001)
+    # test_game()
+    test_simulate(n_times=100, print_sim=True, wait=.1)
     

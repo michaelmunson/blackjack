@@ -125,12 +125,13 @@ class Dealer(Player):
                 card_str_arr.append(f"{self.cards[i].to_str()}")
 
         pref_len = max_name_len - len(self.name)
+        post_str = ""
         if pref_len > 0:
-            [print(" ", end="") for _ in range(pref_len)]
-                
-        
+            for _ in range(pref_len):
+                post_str+= " "
+
         esc.printf(
-            (self.name, "red/strikethrough" if self.is_bust else "Blue/bold/underline"),
+            (self.name, "red/strikethrough" if self.is_bust else "Blue/bold/underline"), post_str,
             (f" ... {'*' if hidden else str(self.hand_value())} ... {' | '.join(card_str_arr)}", "red/strikethrough" if self.is_bust else "Blue/bold")
         )
 
