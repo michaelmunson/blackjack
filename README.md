@@ -50,7 +50,6 @@ results = auto_game.simulate(n_times=10000)
 ```
 
 ### Creating a Strategy
-Here we will create a strategy in which the player never hits.
 
 To create the stragey, create a class that extends the **Strategy** class.
 
