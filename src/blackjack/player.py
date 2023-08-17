@@ -91,9 +91,7 @@ class Player:
         self.is_bust = False
 
     def run_strategy(self, dealer:Dealer=None, players:list[Player]=[]):
-        strategy_name = type(self.strategy).__name__
         other_players = list(filter(lambda player: player != self, players))
-        # strategy if chain
         return self.strategy.run(player=self, players=other_players, dealer=dealer)
         
 class Dealer(Player):

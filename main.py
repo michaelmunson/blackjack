@@ -25,4 +25,4 @@ players = [
 
 auto_game = AutoGame(players=players)
 # auto_game = AutoGame.create(["Mike", "Dan", "John"])
-results = auto_game.simulate(n_times=1000000)
+results = auto_game.simulate(n_times=10000)

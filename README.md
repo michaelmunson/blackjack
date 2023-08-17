@@ -63,7 +63,7 @@ from src.blackjack.player import Strategy, Player, Dealer
 
 class NeverHit(Strategy):
     # include these arguments even if you're not using them
-    def run(self, player=None, players=None, dealer=None):
+    def run(self, player:Player, players:list[Player], dealer:Dealer) -> bool:
         return False
 ```
 Here we create a strategy in which the player always hits if the value of their hand is below 17
@@ -72,8 +72,7 @@ Here we create a strategy in which the player always hits if the value of their 
 from src.blackjack.player import Strategy, Player, Dealer
 
 class Simple17(Strategy):
-    # include these arguments even if you're not using them
-    def run(self, player=None, players=None, dealer=None):
+    def run(self, player:Player, players:list[Player], dealer:Dealer) -> bool:
         return player.hand_value() < 17
 ```
 Here we create a strategy in which the player hits if the dealer has an ace, and their hand value is below 17. If the dealer doesn't have an ace, the player will hit if the value of their hand is below 16.
@@ -83,7 +82,7 @@ from src.blackjack.player import Strategy, Player, Dealer
 
 class DealerAce(Strategy):
     # include these arguments even if you're not using them
-    def run(self, player=None, players=None, dealer=None):
+    def run(self, player:Player, players:list[Player], dealer:Dealer) -> bool:
         if dealer.showing() == 11 and player.hand_value() < 17:
             return True
         else:
