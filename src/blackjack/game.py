@@ -197,12 +197,18 @@ class AutoGame(Game):
             for player in result.lost:
                 player_res_map[player.name]["lost"] += 1
             if print_sim:
+                # for name in player_res_map:
+                #     win_rate = round((player_res_map[name]['won'] / (i+1)) * 100, 3) if player_res_map[name]['won'] > 0 else 0
+                #     esc.printf(
+                #         f"{name} win rate: ", (f"{win_rate}%\n", "red" if win_rate < 50 else "Green")
+                #     ) 
                 sleep(wait)
 
 
         if print_results:
-            esc.erase_screen()
-            esc.cursor_to_top()
+            if print_sim:
+                esc.erase_screen()
+                esc.cursor_to_top()
 
             time_elapsed = time() - start_time
 

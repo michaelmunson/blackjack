@@ -18,6 +18,8 @@ class DealerAce(Strategy):
         else:
             return player.hand_value() < 16
 
+
+
 players = [
     Player("Mike", strategy=Simple17()),
     Player("Daniel", strategy=NeverHit())

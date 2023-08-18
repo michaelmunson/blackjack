@@ -1,0 +1,14 @@
+
+Strategy:
+    [ ] change Strategy.run to return a string -> "hit","double","split","stay"
+
+Deck:
+    [ ] add Hand class
+        [ ] add value() method
+        [ ] add print() method
+
+Player:
+    [ ] change .cards to .hand
+    [ ] add betting
+    [ ] add splitting
+    [ ] add doubling

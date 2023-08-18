@@ -50,6 +50,6 @@ def test_simulate(n_times:int=10, print_sim:bool=False, wait:float|int=.1):
     results = auto_game.simulate(n_times=n_times, print_sim=print_sim, wait=wait)
 
 if __name__ == "__main__":
-    # test_game()
-    test_simulate(n_times=100, print_sim=True, wait=.1)
+    #test_game()
+    test_simulate(n_times=100000, print_sim=False, wait=.005)
     
