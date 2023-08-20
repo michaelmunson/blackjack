@@ -45,6 +45,17 @@ def test_input_bet():
     assert player.chips == (init_chips - bet), "Discrepancy between difference between initial chips and bet amount, and actual result."
     _print_succ()
 
+def test_split_hand():
+    print_tname("*** TEST hand.split ***")
+    hand = Hand("2","2")
+    hand = hand.split(bet=20)
+    assert hand[0].bet == 10, "Bet should be 10.0"
+    hand[0].add("2")
+    hand[0] = hand[0].split()
+    assert hand[0][0].bet == 5, "Bet should be 5.0"
+    assert hand[0][0].value() == 2 and hand[1][0].value == 2
+    _print_succ()
+
 # OTHER
 def test_game():
     game = Game.create([
@@ -95,7 +106,7 @@ def _test_start():
     players = [
         Player("Mike", chips=1000),
         Player("Dan", chips=1000),
-        Player("John", chips=1000)
+        # Player("John", chips=1000)
     ]
 
     game = Game(players=players, min_bet=15)
@@ -108,10 +119,13 @@ def _test_start():
         player.print(max_name_len=max_n)
 
 
+
 if __name__ == "__main__":
     # test_is_blackjack()
+    test_split_hand()
     # test_game()
     # test_simulate(n_times=1000, print_sim=True, wait=.01)
 
     # test_input_bet()
-    _test_start()
+    # _test_start()
+

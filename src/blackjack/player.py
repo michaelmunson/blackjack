@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.blackjack.deck import Card, Hand
+from src.blackjack.deck import Card, Hand, SplitHand
 from escprint import esc
 
 ### STRATEGY ###
@@ -27,11 +27,12 @@ class Simple17(Strategy):
 class Player: 
     name:str
     strategy:Strategy
-    hand:Hand
+    hand:Hand|SplitHand
     chips:int
     bet:int
     is_out:bool
     has_insurance:bool
+    is_split:bool
     insurance:int
 
     def __init__(self, name:str, chips:int=0, strategy:Strategy=Simple()) -> None:
@@ -42,6 +43,7 @@ class Player:
         self.bet = 0
         self.insurance = 0
         self.is_out = False
+        self.is_split = False
         self.has_insurance = False
     
     def hit(self, card:Card) -> bool:
@@ -55,7 +57,7 @@ class Player:
         return self.hand.is_blackjack()
     
     def can_split(self) -> bool:
-        return self.hand[0].rank == self.hand[1].rank
+        return self.hand[0].rank == self.hand[1].rank and self.hand.len() == 2
 
     def hand_value(self) -> int:
         return self.hand.value()

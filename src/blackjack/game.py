@@ -148,18 +148,18 @@ class Game:
 
     def _start_player_decision_round(self) -> None:
         for player in self.players:
-            esc.cursor_to_top()
-            self._print_game_state(current_player=player, reset=False)
-            
+            self._print_game_state(current_player=player)
             if player.is_blackjack():
                 self._handle_player_blackjack(player=player)
                 continue
             decision = self._get_player_decision(player=player)
             self._handle_player_decision(player=player, decision=decision)
+        self._print_game_state()
 
     def _handle_player_blackjack(self, player:Player) -> None:
         if player.is_blackjack():
             # esc.print(f"{player.name} has Black Jack!", "Green/italic")
+            self.log.add(f"{player.name} has Black Jack!", "Green/italic/bold")
             if self.dealer.hand[0] == "Ace":
                 def get_choice():
                     player_choice = esc.input(f"Payout or Insurance? [P/i]\n> ", prompt="Green",input="Magenta")
@@ -194,33 +194,46 @@ class Game:
             else:
                 esc.printf((player.name,"Magenta"),f", What is your decision?\n","Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),")")
 
-
         player_inp = esc.input("> ", input=keyclr, end="")
-        esc.erase_prev(n=3)
         return player_inp
     
     def _handle_player_decision(self, player:Player, decision:str):
         decision = str.lower(decision)
+        # STAY
         if decision in ["s","stay", ""]:
-            self.log.add(f"{player.name} has Stayed", "Blue\italic")
+            self.log.add(f"{player.name} has Stayed", "Blue/italic")
+        # HIT
         elif decision in ["h","hit"]:
             self.hit_player(player=player)
-            # print update
-            esc.cursor_to_top()
-            self._print_game_state(reset=False)
+            self._print_game_state(current_player=player)
             if player.hand_value() < 21:
-                self._get_player_decision(player=player)
-            
+                decision = self._get_player_decision(player=player)
+                self._handle_player_decision(player=player, decision=decision)
+            else:
+                self.log.add(f"{player.name} has busted", "red/italic")
+        # DOUBLE DOWN
         elif decision in ["dd", "double down"]:
-            esc.print(f"{player.name} has Doubled Down\n", "Green")
-            pass
+            self._handle_player_double_down(player=player)
+        # SPLIT
         elif decision in ["spl","split"]:
             esc.print(f"{player.name} has Split\n", "Green")
             pass
+        # INSURANCE
         elif decision in ["i", "insurance"]:
             esc.print(f"{player.name} chose Insurance... insurance bet set @ {round(player.bet/2)}", "Green")
             player.has_insurance = True
 
+    def _handle_player_double_down(self, player:Player) -> None:
+        self.log.add(f"{player.name} has doubled down", "Blue/italic")
+        player.place_bet(bet_amount=player.bet)
+        self.hit_player(player=player)
+        if player.is_bust():
+            self.log.add(f"{player.name} has busted", "red/italic")
+        
+    def _handle_player_split(self, player:Player) -> None:
+        self.log.add(f"{player.name} has split hand")
+        player.hand = player.hand.split()
+        
 
     def _check_and_handle_dealer_blackjack(self) -> None:
         if self.dealer.hand[0] == "Ace":
@@ -248,7 +261,8 @@ class Game:
         payout = round(player.bet * rate)
         player.is_out = True
         player.chips += payout
-        esc.print(f"{player.name} paid out ${payout}", "Green/italic")
+        player.bet = 0
+        self.log.add(f"{player.name} paid out ${payout}", "Green/italic")
         return payout
 
 
@@ -284,6 +298,7 @@ class Game:
             print()
 
         self.log.print()
+        print()
 
     def _is_all_players_bust(self) -> bool:
         for player in self.players:
@@ -392,7 +407,7 @@ class GameResults(NamedTuple):
     lost:int
 
 ### LOG
-class Log(list[tuple[str,str]|str]):
+class Log(list[tuple[str,str]]):
     def __init__(self) -> None:
         pass
 
@@ -406,4 +421,4 @@ class Log(list[tuple[str,str]|str]):
         
     def print(self):
         for item in self:
-            esc.print(item[0], item[1])
+            esc.print('~ ' + item[0], item[1])

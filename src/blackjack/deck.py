@@ -1,4 +1,6 @@
+from __future__ import annotations
 import random
+from typing import NamedTuple
 
 class Card:
     SYM_MAP = {
@@ -38,8 +40,12 @@ class Card:
     def is_suit(suit:str) -> bool:
         return str.lower(suit) in ['hearts','diamonds','clubs','spades', '❤️', '♦️', '♣︎', '♠︎'] 
 
+
 class Hand(list[Card]):
-    def __init__(self, *cards:Card|str):
+    bet:int
+    
+    def __init__(self, *cards:Card|str, bet:int=0):
+        self.bet = bet
         for card in cards:
             self.add(card)
 
@@ -85,6 +91,29 @@ class Hand(list[Card]):
 
     def len(self) -> int:
         return len(self)
+    
+    def split(self, bet:int=0) -> SplitHand:
+        if bet == 0:
+            if self.bet == 0:
+                ind_bet = 0
+            else:
+                ind_bet = self.bet / 2
+        else:
+            ind_bet = bet/2
+
+        return SplitHand(
+            Hand(self[0], bet=ind_bet),
+            Hand(self[1], bet=ind_bet)
+        )
+
+class SplitHand(list[Hand]):
+    def __init__(self, *hands:Hand|SplitHand) -> None:
+        for hand in hands:
+            self.add(hand)
+    
+    def add(self, hand:Hand|SplitHand) -> None:
+        return self.append(hand)
+
 
 class Deck(list):
     def __init__(self, num_decks:int=1, shuffle:bool=False):
@@ -116,3 +145,4 @@ class Deck(list):
     
     def peek(self,num_cards:int):
         return list(map(lambda card: card.to_str(), self[-num_cards:]))
+    
