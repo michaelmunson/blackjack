@@ -11,14 +11,15 @@ class Game:
     players: list[Player]
     dealer: Dealer
     deck: Deck
-    min_bet:int = 18
-
+    min_bet:int
+    log: Log
 
     def __init__(self, players:list[Player], dealer:Dealer=Dealer(), deck:Deck=Deck(shuffle=True, num_decks=8), min_bet:int=15) -> None:
         self.players = players
         self.dealer = dealer
         self.deck = deck
         self.min_bet = min_bet
+        self.log = Log()
 
     def hit_player(self,player:Player) -> bool:
         # if out of cards
@@ -158,7 +159,7 @@ class Game:
 
     def _handle_player_blackjack(self, player:Player) -> None:
         if player.is_blackjack():
-            esc.print(f"{player.name} has Black Jack!", "Green/italic")
+            # esc.print(f"{player.name} has Black Jack!", "Green/italic")
             if self.dealer.hand[0] == "Ace":
                 def get_choice():
                     player_choice = esc.input(f"Payout or Insurance? [P/i]\n> ", prompt="Green",input="Magenta")
@@ -201,7 +202,7 @@ class Game:
     def _handle_player_decision(self, player:Player, decision:str):
         decision = str.lower(decision)
         if decision in ["s","stay", ""]:
-            pass
+            self.log.add(f"{player.name} has Stayed", "Blue\italic")
         elif decision in ["h","hit"]:
             self.hit_player(player=player)
             # print update
@@ -281,6 +282,8 @@ class Game:
                 esc.set("dim")
             player.print(max_name_len=mxnmlen, dealer=dealer)
             print()
+
+        self.log.print()
 
     def _is_all_players_bust(self) -> bool:
         for player in self.players:
@@ -388,3 +391,19 @@ class GameResults(NamedTuple):
     tied:int
     lost:int
 
+### LOG
+class Log(list[tuple[str,str]|str]):
+    def __init__(self) -> None:
+        pass
+
+    def add(self, log_item:str, style:str=""):
+        self.append((log_item, style))
+        
+    def delete(self, key:str):
+        for i in range(len(self)):
+            if self[i][0] == key:
+                del self[i]
+        
+    def print(self):
+        for item in self:
+            esc.print(item[0], item[1])
