@@ -137,24 +137,36 @@ class Game:
 
     def _start_bet_round(self) -> None:
         for player in self.players:
-            player.input_bet(min_bet=self.min_bet)
+            player.get_init_round_inputs(min_bet=self.min_bet)
             esc.erase_screen(); esc.cursor_to_top()
     
     def _start_init_hit_round(self) -> None:
         for _ in range(2):
             for player in self.players:
-                self.hit_player(player=player)
+                if player.has_psuedos():
+                    for psuedo in player.psuedos:
+                        self.hit_player(player=psuedo)
+                else:
+                    self.hit_player(player=player)
             self.hit_player(player=self.dealer)
 
     def _start_player_decision_round(self) -> None:
-        for player in self.players:
-            self._print_game_state(current_player=player)
-            if player.is_blackjack():
-                self._handle_player_blackjack(player=player)
-                continue
-            decision = self._get_player_decision(player=player)
-            self._handle_player_decision(player=player, decision=decision)
         self._print_game_state()
+        for player in self.players:
+            if player.has_psuedos():
+                for pseudo in player.psuedos:
+                    self._print_game_state()
+                    decision = self._get_player_decision(player=pseudo)
+                    self._handle_player_decision(player=pseudo, decision=decision)
+                    self._print_game_state()
+            else:
+                self._print_game_state(current_player=player)
+                if player.is_blackjack():
+                    self._handle_player_blackjack(player=player)
+                    continue
+                decision = self._get_player_decision(player=player)
+                self._handle_player_decision(player=player, decision=decision)
+            self._print_game_state()
 
     def _handle_player_blackjack(self, player:Player) -> None:
         if player.is_blackjack():
@@ -178,23 +190,30 @@ class Game:
                 self._payout_player(player=player, rate=1.5)
 
     def _get_player_decision(self, player:Player) -> str:
+        # handle invalid inputs; put valid into array and check against it
         keyclr = "Magenta"
         if len(player.hand) == 2:
             if self.dealer.hand[0] == "Ace":
                 if player.can_split():
-                    esc.printf((player.name,"Magenta"),f", What is your decision?\n","Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),"), ","Split (",("spl",keyclr),"), ","Insurance (",("i",keyclr),")")
+                    esc.printf((player.name,"Cyan/underline/bold")," -> ", (" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
+                               "Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),"), ","Split (",("spl",keyclr),"), ","Insurance (",("i",keyclr),")")
             if player.can_split():
-                esc.printf((player.name,"Magenta"),f", What is your decision?\n","Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),"), ","Split (",("spl",keyclr),")")
+                esc.printf((player.name,"Cyan/underline/bold")," -> ", (" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
+                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),"), ","Split (",("spl",keyclr),")")
             else:
-                esc.printf((player.name,"Magenta"),f", What is your decision?\n","Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),")")
+                esc.printf((player.name,"Cyan/underline/bold")," -> ",(" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
+                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),")")
 
         else:
             if self.dealer.hand[0] == "Ace":
-                esc.printf((player.name,"Magenta"),f", What is your decision?\n","Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Insurance (",("i",keyclr),")")
+                esc.printf((player.name,"Cyan/underline/bold")," -> ",(" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
+                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Insurance (",("i",keyclr),")")
             else:
-                esc.printf((player.name,"Magenta"),f", What is your decision?\n","Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),")")
+                esc.printf((player.name,"Cyan/underline/bold")," -> ",(" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
+                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),")")
 
         player_inp = esc.input("> ", input=keyclr, end="")
+
         return player_inp
     
     def _handle_player_decision(self, player:Player, decision:str):
@@ -216,7 +235,7 @@ class Game:
             self._handle_player_double_down(player=player)
         # SPLIT
         elif decision in ["spl","split"]:
-            esc.print(f"{player.name} has Split\n", "Green")
+            self._handle_player_split()
             pass
         # INSURANCE
         elif decision in ["i", "insurance"]:
@@ -226,14 +245,17 @@ class Game:
     def _handle_player_double_down(self, player:Player) -> None:
         self.log.add(f"{player.name} has doubled down", "Blue/italic")
         player.place_bet(bet_amount=player.bet)
+        print(player)
+        print(player.bet)
+        input()
         self.hit_player(player=player)
         if player.is_bust():
             self.log.add(f"{player.name} has busted", "red/italic")
         
     def _handle_player_split(self, player:Player) -> None:
         self.log.add(f"{player.name} has split hand")
-        player.hand = player.hand.split()
         
+
 
     def _check_and_handle_dealer_blackjack(self) -> None:
         if self.dealer.hand[0] == "Ace":
@@ -246,15 +268,6 @@ class Game:
             else:
                 for player in self.players:
                     pass
-        # if self.dealer.hand[0] == "Ace":
-        #     self._handle_insurance()
-        
-    # def _handle_insurance(self) -> None:
-    #     if self.dealer.hand[0] != "Ace":
-    #         return
-    #     else:
-    #         for player in self.players:
-    #             if self.dealer.is_blackjack():
 
 
     def _payout_player(self,player:Player, rate:float=2) -> int:
@@ -264,7 +277,6 @@ class Game:
         player.bet = 0
         self.log.add(f"{player.name} paid out ${payout}", "Green/italic")
         return payout
-
 
     def _is_play_again(self) -> bool:
         return str.lower(input("Play again? (Y/n) \n> ")) != "n"
@@ -276,8 +288,13 @@ class Game:
     def _get_player_max_name_len(self) -> int:
         max_len = len(self.dealer.name)
         for player in self.players:
-            if len(player.name) > max_len:
-                max_len = len(player.name)
+            if player.has_psuedos():
+                for psuedo in player.psuedos:
+                    if len(psuedo.name) > max_len:
+                        max_len = len(psuedo.name)
+            else: 
+                if len(player.name) > max_len:
+                    max_len = len(player.name)
         return max_len
 
     def _print_game_state(self, current_player:Player=None, reset:bool=True, dealer:Dealer=None) -> None:
@@ -286,19 +303,18 @@ class Game:
             esc.erase_screen()
             esc.cursor_to_top()
         mxnmlen = self._get_player_max_name_len()
-        if current_player:
-            esc.set("dim")
-        
+        # if current_player:
+        #     esc.set("dim")
         self.dealer.print(max_name_len=mxnmlen, hidden=hide_dealer)
         print()
         for player in self.players:
-            if current_player and player != current_player:
-                esc.set("dim")
+            # if current_player and player != current_player:
+            #     esc.set("dim")
             player.print(max_name_len=mxnmlen, dealer=dealer)
             print()
 
-        self.log.print()
-        print()
+        # self.log.print()
+        # print()
 
     def _is_all_players_bust(self) -> bool:
         for player in self.players:

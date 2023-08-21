@@ -92,27 +92,21 @@ class Hand(list[Card]):
     def len(self) -> int:
         return len(self)
     
-    def split(self, bet:int=0) -> SplitHand:
-        if bet == 0:
-            if self.bet == 0:
-                ind_bet = 0
-            else:
-                ind_bet = self.bet / 2
-        else:
-            ind_bet = bet/2
+#     def split(self, bet:int=0) -> SplitHand:
+#         bet = self.bet if self.bet > 0 else 0
 
-        return SplitHand(
-            Hand(self[0], bet=ind_bet),
-            Hand(self[1], bet=ind_bet)
-        )
+#         return SplitHand(
+#             Hand(self[0], bet=ind_bet),
+#             Hand(self[1], bet=ind_bet)
+#         )
 
-class SplitHand(list[Hand]):
-    def __init__(self, *hands:Hand|SplitHand) -> None:
-        for hand in hands:
-            self.add(hand)
+# class SplitHand(list[Hand]):
+#     def __init__(self, *hands:Hand|SplitHand) -> None:
+#         for hand in hands:
+#             self.add(hand)
     
-    def add(self, hand:Hand|SplitHand) -> None:
-        return self.append(hand)
+#     def add(self, hand:Hand|SplitHand) -> None:
+#         return self.append(hand)
 
 
 class Deck(list):

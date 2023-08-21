@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.blackjack.deck import Card, Hand, SplitHand
+from src.blackjack.deck import Card, Hand
 from escprint import esc
 
 ### STRATEGY ###
@@ -27,13 +27,14 @@ class Simple17(Strategy):
 class Player: 
     name:str
     strategy:Strategy
-    hand:Hand|SplitHand
+    hand:Hand
     chips:int
     bet:int
     is_out:bool
     has_insurance:bool
     is_split:bool
     insurance:int
+    psuedos:list[PseudoPlayer]
 
     def __init__(self, name:str, chips:int=0, strategy:Strategy=Simple()) -> None:
         self.name = name
@@ -43,7 +44,7 @@ class Player:
         self.bet = 0
         self.insurance = 0
         self.is_out = False
-        self.is_split = False
+        self.psuedos = []
         self.has_insurance = False
     
     def hit(self, card:Card) -> bool:
@@ -82,12 +83,22 @@ class Player:
         
         print_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Green/bold"
         print_strike = "strike" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
-        esc.printf(
-            (self.name, print_style, print_strike, "underline"), (post_str,print_style), 
-            (f" ... ${self.chips} -> ${self.bet}", print_style),
-            (f"\n{post_str + (' '*len(self.name))} ... {' | '.join(card_str_arr)}", print_style)
-
-        )
+        print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
+        
+        if not self.has_psuedos():
+            esc.printf(
+                (self.name, print_style, print_strike, "underline"), (post_str,print_style), 
+                " ... ", (f"${self.bet}", print_style, "underline"),
+                " -> ", # (f"{post_str + (' '*len(self.name))} ... ", print_style), 
+                (f"{' | '.join(card_str_arr)}", print_hand_style)
+            )
+        else:
+            esc.printf(
+                (self.name, print_style, print_strike, "underline"), 
+                (post_str,print_style)," ... ", (f"${self.bet}", print_style, "underline/dim"),
+            )
+            for pseudo in self.psuedos:
+                pseudo.print(max_name_len=max_name_len, dealer=dealer)
 
     def reset(self) -> None:
         self.hand.clear()
@@ -107,31 +118,103 @@ class Player:
         return self.bet
 
     def input_bet(self, min_bet:int=15) -> int:
-        
         esc.printf(
-            f"{self.name} (", [f"${self.chips}", "Green/underline"], ") What is your bet?"  
+            f"{self.name} (", [f"${self.chips}", "Green/underline"], 
+            f") What is your bet? ", (f"defualt = ${min_bet}","dim")  
         )
 
-        bet_amount = int(
+        bet_amount = (
             esc.input("$", input="Green", end="")
         )
-        
-        bet_placed = self.place_bet(bet_amount=bet_amount, min_bet=min_bet)
 
-        if bet_placed < 0:
+        if bet_amount == "":
+            bet_amount = min_bet
+        else:
+            bet_amount = int(bet_amount)
+        
+        # bet_placed = self.place_bet(bet_amount=bet_amount, min_bet=min_bet)
+
+        if bet_amount > self.chips or min_bet > bet_amount:
             esc.erase_prev(n=4)
-            if bet_placed == -1:
+            if min_bet > bet_amount == -1:
                 esc.print(f"Bet amount (${bet_amount}) lower than Min Bet (${min_bet})", "red")
-            elif bet_placed == -2:
-                esc.print(f"Insufficient Chips (${self.chips}) to Cover Bet (${bet_amount})","red")
+            elif bet_amount > self.chips == -2:
+                esc.print(f"Insufficient Chips (${self.chips}) to cover bet (${bet_amount})","red")
             return self.input_bet(min_bet=min_bet)
         
-        return bet_placed
+        return bet_amount
+
+    def get_init_round_inputs(self, min_bet:int=15) -> None:
+        esc.printf(
+            f"{self.name}, How many hands? ", ("default = 1", "dim")  
+        )
+
+        hand_amount = (
+            esc.input("#", input="Green", end="")
+        )
+
+        if hand_amount == "":
+            hand_amount = 1
+        else:
+            hand_amount = int(hand_amount)
+
+        bet_amount = self.input_bet()
+
+        if hand_amount > 1:
+            for i in range(hand_amount):
+                self.psuedos.append(
+                    PseudoPlayer(name=f"{self.name}", parent=self, bet=bet_amount)
+                )
+        
+        self.place_bet(bet_amount=bet_amount*hand_amount, min_bet=min_bet)
+
+    def has_psuedos(self) -> bool:
+        return len(self.psuedos) > 0
 
     def run_strategy(self, dealer:Dealer=None, players:list[Player]=[]):
         other_players = list(filter(lambda player: player != self, players))
         return self.strategy.run(player=self, players=other_players, dealer=dealer)
+
+### Pseudo PLAYER ###
+class PseudoPlayer(Player):
+    def __init__(self, name:str, parent:Player, bet:int) -> None:
+        super().__init__(name)
+        self.bet = bet
+        self.parent = parent
+    
+    def print(self, max_name_len:int=0, dealer:Dealer=None) -> None:
+        dealer_hand_value = -1 if dealer == None else dealer.hand_value()
+
+        card_str_arr = []
+        for card in self.hand:
+            card_str_arr.append(f"{card.to_str()}")
+
+        pref_len = max_name_len - len(self.name)
+        post_str = ""
+        if pref_len > 0:
+            post_str = " " * pref_len
         
+        print_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Green/bold"
+        print_strike = "strike" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
+        print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
+        
+        esc.printf(
+            (f"{post_str + (' '*len(self.name))} ... ${self.bet}", print_style, print_strike), 
+            " -> ", (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike)
+        )
+
+    def place_bet(self, bet_amount: int, min_bet: int = 15) -> int:
+        if self.chips < bet_amount:
+            return -2
+        
+        if min_bet > bet_amount:
+            return -1
+        
+        self.bet += bet_amount
+        self.chips -= bet_amount
+
+        return self.bet
+
 class Dealer(Player):
     def __init__(self, strategy:Strategy=Simple17()) -> None:
         super().__init__("Dealer", strategy)
@@ -152,7 +235,7 @@ class Dealer(Player):
 
         esc.printf(
             (self.name, "red/strikethrough" if self.is_bust() else "Blue/bold/underline"), post_str,
-            (f" ... {' | '.join(card_str_arr)}", "red/strikethrough" if self.is_bust() else "Blue/bold")
+            (f" ... {' | '.join(card_str_arr)}", "red/strikethrough" if self.is_bust() else "Cyan/bold")
         )
 
     def showing(self) -> int:
