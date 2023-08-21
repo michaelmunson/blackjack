@@ -190,29 +190,30 @@ class Game:
                 self._payout_player(player=player, rate=1.5)
 
     def _get_player_decision(self, player:Player) -> str:
-        # handle invalid inputs; put valid into array and check against it
         keyclr = "Magenta"
-        if len(player.hand) == 2:
-            if self.dealer.hand[0] == "Ace":
-                if player.can_split():
-                    esc.printf((player.name,"Cyan/underline/bold")," -> ", (" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
-                               "Stay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),"), ","Split (",("spl",keyclr),"), ","Insurance (",("i",keyclr),")")
+        valid_inps = ["Stay","s", "Hit", "h"]
+        
+        if player.hand.len() == 2:
+            valid_inps += ["Double Down", "dd"]
             if player.can_split():
-                esc.printf((player.name,"Cyan/underline/bold")," -> ", (" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
-                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),"), ","Split (",("spl",keyclr),")")
-            else:
-                esc.printf((player.name,"Cyan/underline/bold")," -> ",(" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
-                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Double Down (",("dd",keyclr),")")
+                valid_inps += ["Split", "spl"]
 
-        else:
-            if self.dealer.hand[0] == "Ace":
-                esc.printf((player.name,"Cyan/underline/bold")," -> ",(" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
-                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),"), ","Insurance (",("i",keyclr),")")
-            else:
-                esc.printf((player.name,"Cyan/underline/bold")," -> ",(" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"),
-                           "\nStay (",("s",keyclr),"), ","Hit (",("h",keyclr),")")
+        if self.dealer.hand[0] == "Ace":
+            if not player.has_insurance:
+                valid_inps += ["Insurance","i"]
+        
+        esc.printf((player.name,"Cyan/underline/bold")," -> ", (" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"), end="")
+        for i in range(0,len(valid_inps),2):
+            post_str = ", " if i+2 != len(valid_inps) else ""
+            print(f"{valid_inps[i]} (", end=""); esc.print(valid_inps[i+1], keyclr, end=""); print(")"+post_str, end="")
 
+        print() 
         player_inp = esc.input("> ", input=keyclr, end="")
+
+        if str.lower(player_inp) not in list(map(lambda s:str.lower(s), valid_inps)):
+            esc.erase_prev(3)
+            esc.print(f'"{player_inp}" not a valid input', "red")
+            return self._get_player_decision(player=player)
 
         return player_inp
     
@@ -235,7 +236,7 @@ class Game:
             self._handle_player_double_down(player=player)
         # SPLIT
         elif decision in ["spl","split"]:
-            self._handle_player_split()
+            self._handle_player_split(player=player)
             pass
         # INSURANCE
         elif decision in ["i", "insurance"]:
@@ -245,18 +246,13 @@ class Game:
     def _handle_player_double_down(self, player:Player) -> None:
         self.log.add(f"{player.name} has doubled down", "Blue/italic")
         player.place_bet(bet_amount=player.bet)
-        print(player)
-        print(player.bet)
-        input()
         self.hit_player(player=player)
         if player.is_bust():
             self.log.add(f"{player.name} has busted", "red/italic")
         
     def _handle_player_split(self, player:Player) -> None:
-        self.log.add(f"{player.name} has split hand")
         
-
-
+        
     def _check_and_handle_dealer_blackjack(self) -> None:
         if self.dealer.hand[0] == "Ace":
             if self.dealer.is_blackjack():

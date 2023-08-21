@@ -84,13 +84,14 @@ class Player:
         print_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Green/bold"
         print_strike = "strike" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
+        print_red = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         
         if not self.has_psuedos():
             esc.printf(
                 (self.name, print_style, print_strike, "underline"), (post_str,print_style), 
-                " ... ", (f"${self.bet}", print_style, "underline"),
-                " -> ", # (f"{post_str + (' '*len(self.name))} ... ", print_style), 
-                (f"{' | '.join(card_str_arr)}", print_hand_style)
+                (" ... ",print_red), (f"${self.bet}", print_style, "underline"),
+                (" -> ",print_red), # (f"{post_str + (' '*len(self.name))} ... ", print_style), 
+                (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike)
             )
         else:
             esc.printf(
@@ -175,6 +176,9 @@ class Player:
         other_players = list(filter(lambda player: player != self, players))
         return self.strategy.run(player=self, players=other_players, dealer=dealer)
 
+    def split_hand(self):
+        pass
+
 ### Pseudo PLAYER ###
 class PseudoPlayer(Player):
     def __init__(self, name:str, parent:Player, bet:int) -> None:
@@ -196,11 +200,12 @@ class PseudoPlayer(Player):
         
         print_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Green/bold"
         print_strike = "strike" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
+        print_red = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
         
         esc.printf(
             (f"{post_str + (' '*len(self.name))} ... ${self.bet}", print_style, print_strike), 
-            " -> ", (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike)
+            (" -> ",print_red), (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike)
         )
 
     def place_bet(self, bet_amount: int, min_bet: int = 15) -> int:
@@ -214,6 +219,9 @@ class PseudoPlayer(Player):
         self.chips -= bet_amount
 
         return self.bet
+
+    def split_hand(self):
+        pass
 
 class Dealer(Player):
     def __init__(self, strategy:Strategy=Simple17()) -> None:
