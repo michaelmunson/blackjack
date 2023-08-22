@@ -167,8 +167,8 @@ class Player:
                 self.pseudos.append(
                     PseudoPlayer(name=f"{self.name}", parent=self, bet=bet_amount)
                 )
-        
-        self.place_bet(bet_amount=bet_amount*hand_amount, min_bet=min_bet)
+        else:
+            self.place_bet(bet_amount=bet_amount, min_bet=min_bet)
 
     def has_pseudos(self) -> bool:
         return len(self.pseudos) > 0
@@ -195,10 +195,10 @@ class Player:
 class PseudoPlayer(Player):
     def __init__(self, name:str, parent:Player, bet:int, hand:Hand=None) -> None: # hand = Hand() causes weird bug
         super().__init__(name)
-        self.bet = bet
         self.parent = parent
         self.hand = hand if hand != None else Hand() # again have to do cause weird bug
         self.is_pseudo = True
+        self.place_bet(bet_amount=bet)
     
     def print(self, max_name_len:int=0, dealer:Dealer=None) -> None:
         dealer_hand_value = -1 if dealer == None else dealer.hand_value()

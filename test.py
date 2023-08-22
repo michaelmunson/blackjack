@@ -46,7 +46,7 @@ def test_input_bet():
     _print_succ()
 
 def test_split_hand():
-    print_tname("*** TEST player.split_hand ***")
+    print_tname("*** TEST Player.split_hand ***")
     player = Player("Mike", 1000)
     player.bet = 100
     player.hand = Hand("5","5")
@@ -56,13 +56,19 @@ def test_split_hand():
     assert player.bet == 200, "Player bet should be 200"
     _print_succ()
 
-def test_double_down():
-    player = Player("Mike",1000)
+def test_pseudo_place_bet():
+    print_tname("*** TEST PseudoPlayer.place_bet ***")
+    player = Player("Mike",chips=1000)
     pseudo = PseudoPlayer("Mike-pseudo",parent=player, bet=15)
-    print(f"bet: {pseudo.bet}")
+    # print(player.chips)
+    # print(f"bet: {pseudo.bet}")
     pseudo.place_bet(15)
-    print(f"bet: {pseudo.bet}")
-
+    # print(f"bet: {pseudo.bet}")
+    # print(f"player chips = {player.chips}")
+    assert pseudo.bet == 30, "Pseudo bet should be 30"
+    assert player.chips == 970, "Player chips should be 970"
+    assert player.bet == 30, "Player bet should be 30"
+    _print_succ()
 
 # OTHER
 def test_game():
@@ -138,8 +144,6 @@ if __name__ == "__main__":
     # pseudo.hit(Card("5"))
     # print(pseudo.hand)
     # test_input_bet()
-    # test_double_down()
+    # test_pseudo_place_bet()
     # test_split_hand()
-
-
     _test_start()
