@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.blackjack.deck import Deck
+from src.blackjack.deck import Deck, Hand
 from src.blackjack.player import Player, Dealer, Simple
 from escprint import esc
 from collections import namedtuple
@@ -143,21 +143,44 @@ class Game:
     def _start_init_hit_round(self) -> None:
         for _ in range(2):
             for player in self.players:
-                if player.has_psuedos():
-                    for psuedo in player.psuedos:
-                        self.hit_player(player=psuedo)
+                if player.has_pseudos():
+                    for pseudo in player.pseudos:
+                        # pseudo.hand.add("6")
+                        self.hit_player(player=pseudo)
                 else:
+                    # player.hand.add("6")
                     self.hit_player(player=player)
+
             self.hit_player(player=self.dealer)
 
     def _start_player_decision_round(self) -> None:
         self._print_game_state()
-        for player in self.players:
-            if player.has_psuedos():
-                for pseudo in player.psuedos:
+        self.log.add(f"starting")
+        i = 0
+        while i < len(self.players):
+            self.log.add(f"i = {i}")
+            player = self.players[i]
+        # for player in self.players:
+            if player.has_pseudos():
+                j = 0
+                while j < len(player.pseudos) :
+                    self.log.add(f"j = {j}")
+                    pseudo = player.pseudos[j]
+                    j+=1
                     self._print_game_state()
                     decision = self._get_player_decision(player=pseudo)
-                    self._handle_player_decision(player=pseudo, decision=decision)
+                    if decision in ["spl","split"]:
+                        j -= 1
+                        # self.log.add(f"spl -> dec j 1 = {j}")
+                    if decision in ["hit","h"]:
+                        j -= 1
+                        # self.log.add(f"hit -> dec j 1 = {j}")
+                        # pseudo.hand.add("6")
+                        self.hit_player(player=pseudo)
+                    else:
+                        # self.log.add(f"else -> handling decision")
+                        # self.log.add(f"j = {j}")
+                        self._handle_player_decision(player=pseudo, decision=decision)
                     self._print_game_state()
             else:
                 self._print_game_state(current_player=player)
@@ -165,8 +188,19 @@ class Game:
                     self._handle_player_blackjack(player=player)
                     continue
                 decision = self._get_player_decision(player=player)
-                self._handle_player_decision(player=player, decision=decision)
+                self.log.add(decision)
+                if decision in ["spl","split"]:
+                    i -= 1
+                    # self.log.add(f"spl -> dec i 1 = {i+1}")
+                if decision in ["hit","h"]:
+                    i -= 1
+                    # self.log.add(f"hit -> dec i 1 = {i}")
+                    self.hit_player(player=player)
+                else:
+                    self.log.add(f"else -> handle decision")
+                    self._handle_player_decision(player=player, decision=decision)
             self._print_game_state()
+            i += 1
 
     def _handle_player_blackjack(self, player:Player) -> None:
         if player.is_blackjack():
@@ -191,10 +225,11 @@ class Game:
 
     def _get_player_decision(self, player:Player) -> str:
         keyclr = "Magenta"
-        valid_inps = ["Stay","s", "Hit", "h"]
+        valid_inps = ["","Stay","s", "Hit", "h"]
         
-        if player.hand.len() == 2:
-            valid_inps += ["Double Down", "dd"]
+        if player.hand.len() <= 2:
+            if (player.is_pseudo and player.parent.chips > player.bet) or player.chips > player.bet:
+                valid_inps += ["Double Down", "dd"]
             if player.can_split():
                 valid_inps += ["Split", "spl"]
 
@@ -203,7 +238,7 @@ class Game:
                 valid_inps += ["Insurance","i"]
         
         esc.printf((player.name,"Cyan/underline/bold")," -> ", (" | ".join(list(map(lambda card: card.to_str(), player.hand))), "Cyan/bold"), end="")
-        for i in range(0,len(valid_inps),2):
+        for i in range(1,len(valid_inps),2):
             post_str = ", " if i+2 != len(valid_inps) else ""
             print(f"{valid_inps[i]} (", end=""); esc.print(valid_inps[i+1], keyclr, end=""); print(")"+post_str, end="")
 
@@ -222,22 +257,12 @@ class Game:
         # STAY
         if decision in ["s","stay", ""]:
             self.log.add(f"{player.name} has Stayed", "Blue/italic")
-        # HIT
-        elif decision in ["h","hit"]:
-            self.hit_player(player=player)
-            self._print_game_state(current_player=player)
-            if player.hand_value() < 21:
-                decision = self._get_player_decision(player=player)
-                self._handle_player_decision(player=player, decision=decision)
-            else:
-                self.log.add(f"{player.name} has busted", "red/italic")
         # DOUBLE DOWN
         elif decision in ["dd", "double down"]:
             self._handle_player_double_down(player=player)
         # SPLIT
         elif decision in ["spl","split"]:
-            self._handle_player_split(player=player)
-            pass
+            player.split_hand()
         # INSURANCE
         elif decision in ["i", "insurance"]:
             esc.print(f"{player.name} chose Insurance... insurance bet set @ {round(player.bet/2)}", "Green")
@@ -249,10 +274,7 @@ class Game:
         self.hit_player(player=player)
         if player.is_bust():
             self.log.add(f"{player.name} has busted", "red/italic")
-        
-    def _handle_player_split(self, player:Player) -> None:
-        
-        
+             
     def _check_and_handle_dealer_blackjack(self) -> None:
         if self.dealer.hand[0] == "Ace":
             if self.dealer.is_blackjack():
@@ -264,7 +286,6 @@ class Game:
             else:
                 for player in self.players:
                     pass
-
 
     def _payout_player(self,player:Player, rate:float=2) -> int:
         payout = round(player.bet * rate)
@@ -284,10 +305,10 @@ class Game:
     def _get_player_max_name_len(self) -> int:
         max_len = len(self.dealer.name)
         for player in self.players:
-            if player.has_psuedos():
-                for psuedo in player.psuedos:
-                    if len(psuedo.name) > max_len:
-                        max_len = len(psuedo.name)
+            if player.has_pseudos():
+                for pseudo in player.pseudos:
+                    if len(pseudo.name) > max_len:
+                        max_len = len(pseudo.name)
             else: 
                 if len(player.name) > max_len:
                     max_len = len(player.name)
@@ -310,7 +331,7 @@ class Game:
             print()
 
         # self.log.print()
-        # print()
+        print()
 
     def _is_all_players_bust(self) -> bool:
         for player in self.players:

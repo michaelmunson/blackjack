@@ -34,7 +34,7 @@ class Player:
     has_insurance:bool
     is_split:bool
     insurance:int
-    psuedos:list[PseudoPlayer]
+    pseudos:list[PseudoPlayer]
 
     def __init__(self, name:str, chips:int=0, strategy:Strategy=Simple()) -> None:
         self.name = name
@@ -44,8 +44,9 @@ class Player:
         self.bet = 0
         self.insurance = 0
         self.is_out = False
-        self.psuedos = []
+        self.pseudos = []
         self.has_insurance = False
+        self.is_pseudo = False
     
     def hit(self, card:Card) -> bool:
         self.hand.add(card)
@@ -58,7 +59,7 @@ class Player:
         return self.hand.is_blackjack()
     
     def can_split(self) -> bool:
-        return self.hand[0].rank == self.hand[1].rank and self.hand.len() == 2
+        return self.hand.len() == 2 and self.hand[0].rank == self.hand[1].rank
 
     def hand_value(self) -> int:
         return self.hand.value()
@@ -86,7 +87,7 @@ class Player:
         print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
         print_red = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         
-        if not self.has_psuedos():
+        if not self.has_pseudos():
             esc.printf(
                 (self.name, print_style, print_strike, "underline"), (post_str,print_style), 
                 (" ... ",print_red), (f"${self.bet}", print_style, "underline"),
@@ -98,7 +99,7 @@ class Player:
                 (self.name, print_style, print_strike, "underline"), 
                 (post_str,print_style)," ... ", (f"${self.bet}", print_style, "underline/dim"),
             )
-            for pseudo in self.psuedos:
+            for pseudo in self.pseudos:
                 pseudo.print(max_name_len=max_name_len, dealer=dealer)
 
     def reset(self) -> None:
@@ -163,28 +164,41 @@ class Player:
 
         if hand_amount > 1:
             for i in range(hand_amount):
-                self.psuedos.append(
+                self.pseudos.append(
                     PseudoPlayer(name=f"{self.name}", parent=self, bet=bet_amount)
                 )
         
         self.place_bet(bet_amount=bet_amount*hand_amount, min_bet=min_bet)
 
-    def has_psuedos(self) -> bool:
-        return len(self.psuedos) > 0
+    def has_pseudos(self) -> bool:
+        return len(self.pseudos) > 0
 
     def run_strategy(self, dealer:Dealer=None, players:list[Player]=[]):
         other_players = list(filter(lambda player: player != self, players))
         return self.strategy.run(player=self, players=other_players, dealer=dealer)
 
-    def split_hand(self):
-        pass
+    def split_hand(self) -> None:
+        # weed out bad calls
+        if not self.can_split():
+            return
+        # rest
+        (hand1,hand2) = self.hand.split()
+
+        self.pseudos = [
+            PseudoPlayer(self.name, parent=self, bet=self.bet, hand=hand1),
+            PseudoPlayer(self.name, parent=self, bet=self.bet, hand=hand2)
+        ]
+        #
+        self.bet *= 2
 
 ### Pseudo PLAYER ###
 class PseudoPlayer(Player):
-    def __init__(self, name:str, parent:Player, bet:int) -> None:
+    def __init__(self, name:str, parent:Player, bet:int, hand:Hand=None) -> None: # hand = Hand() causes weird bug
         super().__init__(name)
         self.bet = bet
         self.parent = parent
+        self.hand = hand if hand != None else Hand() # again have to do cause weird bug
+        self.is_pseudo = True
     
     def print(self, max_name_len:int=0, dealer:Dealer=None) -> None:
         dealer_hand_value = -1 if dealer == None else dealer.hand_value()
@@ -209,19 +223,29 @@ class PseudoPlayer(Player):
         )
 
     def place_bet(self, bet_amount: int, min_bet: int = 15) -> int:
-        if self.chips < bet_amount:
+        if self.parent.chips < bet_amount:
             return -2
         
         if min_bet > bet_amount:
             return -1
         
         self.bet += bet_amount
-        self.chips -= bet_amount
+        self.parent.bet += bet_amount
+        self.parent.chips -= bet_amount
 
         return self.bet
 
     def split_hand(self):
-        pass
+        # weed out bad calls
+        if not self.can_split():
+            return
+        # rest
+        (hand1,hand2) = self.hand.split()
+        index = self.parent.pseudos.index(self)
+        self.parent.pseudos.pop(index)
+        self.parent.pseudos.insert(index, PseudoPlayer(self.name, parent=self.parent, bet=self.bet, hand=hand1))
+        self.parent.pseudos.insert(index+1,  PseudoPlayer(self.name, parent=self.parent, bet=self.bet, hand=hand2))
+        self.parent.bet += self.bet
 
 class Dealer(Player):
     def __init__(self, strategy:Strategy=Simple17()) -> None:

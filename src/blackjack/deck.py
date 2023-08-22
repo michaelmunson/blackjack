@@ -92,22 +92,11 @@ class Hand(list[Card]):
     def len(self) -> int:
         return len(self)
     
-#     def split(self, bet:int=0) -> SplitHand:
-#         bet = self.bet if self.bet > 0 else 0
-
-#         return SplitHand(
-#             Hand(self[0], bet=ind_bet),
-#             Hand(self[1], bet=ind_bet)
-#         )
-
-# class SplitHand(list[Hand]):
-#     def __init__(self, *hands:Hand|SplitHand) -> None:
-#         for hand in hands:
-#             self.add(hand)
-    
-#     def add(self, hand:Hand|SplitHand) -> None:
-#         return self.append(hand)
-
+    def split(self) -> tuple[Hand,Hand]:
+        return (
+            Hand(self[0]),
+            Hand(self[1])
+        )
 
 class Deck(list):
     def __init__(self, num_decks:int=1, shuffle:bool=False):

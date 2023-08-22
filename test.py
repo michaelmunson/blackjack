@@ -1,6 +1,6 @@
 from src.blackjack.game import Game, Simple, Player, Dealer, AutoGame
 from src.blackjack.deck import Deck, Card, Hand
-from src.blackjack.player import Simple, Simple17
+from src.blackjack.player import Simple, Simple17, PseudoPlayer
 from escprint import esc
 from typing import TypedDict, NamedTuple
 import typing
@@ -46,7 +46,23 @@ def test_input_bet():
     _print_succ()
 
 def test_split_hand():
-    pass
+    print_tname("*** TEST player.split_hand ***")
+    player = Player("Mike", 1000)
+    player.bet = 100
+    player.hand = Hand("5","5")
+    player.split_hand()
+    assert player.pseudos[0].hand.len() == 1 and player.pseudos[1].hand.len() == 1, "Hand length should be 1"
+    assert player.pseudos[0].hand[0].value == 5 and player.pseudos[1].hand[0].value == 5, "Hand values should be 5"
+    assert player.bet == 200, "Player bet should be 200"
+    _print_succ()
+
+def test_double_down():
+    player = Player("Mike",1000)
+    pseudo = PseudoPlayer("Mike-pseudo",parent=player, bet=15)
+    print(f"bet: {pseudo.bet}")
+    pseudo.place_bet(15)
+    print(f"bet: {pseudo.bet}")
+
 
 # OTHER
 def test_game():
@@ -97,7 +113,7 @@ def test_simulate(n_times:int=10, print_sim:bool=False, wait:float|int=.1):
 def _test_start():
     players = [
         Player("Mike", chips=1000),
-        Player("Dan", chips=1000),
+        # Player("Dan", chips=1000),
         # Player("John", chips=1000)
     ]
 
@@ -117,7 +133,13 @@ if __name__ == "__main__":
     # test_split_hand()
     # test_game()
     # test_simulate(n_times=1000, print_sim=True, wait=.01)
-
+    # player = Player("Mike", 100)
+    # pseudo = PseudoPlayer("Mike1",parent=player, bet=player.bet)
+    # pseudo.hit(Card("5"))
+    # print(pseudo.hand)
     # test_input_bet()
-    _test_start()
+    # test_double_down()
+    # test_split_hand()
 
+
+    _test_start()
