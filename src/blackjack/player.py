@@ -30,8 +30,6 @@ class Player:
     hand:Hand
     chips:int
     bet:int
-    is_out:bool
-    has_insurance:bool
     is_split:bool
     insurance:int
     pseudos:list[PseudoPlayer]
@@ -43,10 +41,9 @@ class Player:
         self.chips = chips
         self.bet = 0
         self.insurance = 0
-        self.is_out = False
         self.pseudos = []
-        self.has_insurance = False
         self.is_pseudo = False
+        self.is_stayed = False
     
     def hit(self, card:Card) -> bool:
         self.hand.add(card)
@@ -55,7 +52,7 @@ class Player:
     def is_bust(self) -> bool:
         return self.hand.is_bust()
 
-    def is_blackjack(self) -> bool:
+    def has_blackjack(self) -> bool:
         return self.hand.is_blackjack()
     
     def can_split(self) -> bool:
@@ -87,17 +84,21 @@ class Player:
         print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
         print_red = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         
+        bet_str = f"${self.bet}" if not self.has_insurance() else f"${self.bet} + (${self.insurance})"
+        stayed_check = " ✔︎" if self.is_stayed else ""
+
         if not self.has_pseudos():
             esc.printf(
                 (self.name, print_style, print_strike, "underline"), (post_str,print_style), 
-                (" ... ",print_red), (f"${self.bet}", print_style, "underline"),
+                (" ... ",print_red), (bet_str, print_style, "underline"),
                 (" -> ",print_red), # (f"{post_str + (' '*len(self.name))} ... ", print_style), 
-                (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike)
+                (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike),
+                stayed_check
             )
         else:
             esc.printf(
                 (self.name, print_style, print_strike, "underline"), 
-                (post_str,print_style)," ... ", (f"${self.bet}", print_style, "underline/dim"),
+                (post_str,print_style)," ... ", (bet_str, print_style, "underline/dim"),
             )
             for pseudo in self.pseudos:
                 pseudo.print(max_name_len=max_name_len, dealer=dealer)
@@ -105,7 +106,8 @@ class Player:
     def reset(self) -> None:
         self.hand.clear()
         self.bet = 0
-        self.out = True
+        self.insurance = 0
+        self.is_stayed = False
 
     def place_bet(self, bet_amount:int, min_bet:int=15) -> int:
         if self.chips < bet_amount:
@@ -118,6 +120,11 @@ class Player:
         self.chips -= bet_amount
 
         return self.bet
+
+    def place_insurance_bet(self) -> None:
+        bet = (self.bet / 2)
+        self.insurance = bet
+        self.chips -= bet
 
     def input_bet(self, min_bet:int=15) -> int:
         esc.printf(
@@ -173,6 +180,9 @@ class Player:
     def has_pseudos(self) -> bool:
         return len(self.pseudos) > 0
 
+    def has_insurance(self) -> bool:
+        return self.insurance > 0
+
     def run_strategy(self, dealer:Dealer=None, players:list[Player]=[]):
         other_players = list(filter(lambda player: player != self, players))
         return self.strategy.run(player=self, players=other_players, dealer=dealer)
@@ -216,10 +226,12 @@ class PseudoPlayer(Player):
         print_strike = "strike" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         print_red = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
         print_hand_style = "red" if (self.is_bust() or (dealer_hand_value > self.hand_value() and dealer_hand_value < 22) or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Cyan/bold"
-        
+        stayed_check = " ✔︎" if self.is_stayed else ""
+
         esc.printf(
             (f"{post_str + (' '*len(self.name))} ... ${self.bet}", print_style, print_strike), 
-            (" -> ",print_red), (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike)
+            (" -> ",print_red), (f"{' | '.join(card_str_arr)}", print_hand_style, print_strike),
+            stayed_check
         )
 
     def place_bet(self, bet_amount: int, min_bet: int = 15) -> int:
@@ -274,3 +286,6 @@ class Dealer(Player):
         if len(self.hand) > 0:
             return self.hand[0].value
         return 0
+    
+    def showing_ace(self) -> bool:
+        return self.hand[0].rank == "Ace"
