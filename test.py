@@ -1,4 +1,4 @@
-from src.blackjack.game import Game, Simple, Player, Dealer, AutoGame
+from src.blackjack.game import Game, Simple, Player, Dealer, Simulation
 from src.blackjack.deck import Deck, Card, Hand
 from src.blackjack.player import Simple, Simple17, PseudoPlayer
 from escprint import esc
@@ -84,39 +84,7 @@ def test_print():
     player.hit(Card("2"))
     player.print()
 
-def test_simple_strategy():
-    print("Player: ")
-    player = Player("self")
-    player.hit(Card("King","hearts"))
-    player.hit(Card("5", "spades"))
-    print(f"{player.name} = {player.hand_value()}, Hit? -> {player.run_strategy()}")
-    player.hit(Card("3", "clubs"))
-    print(f"{player.name} = {player.hand_value()}, Hit? -> {player.run_strategy()}")
-    ###
-    print("Dealer: ")
-    dealer = Dealer()
-    dealer.hit(Card("King", "clubs"))
-    dealer.hit(Card("6", "hearts"))
-    print(f"{dealer.name} = {dealer.hand_value()}, Hit? -> {dealer.run_strategy()}")
-    dealer.hit(Card("2", "spades"))
-    print(f"{dealer.name} = {dealer.hand_value()}, Hit? -> {dealer.run_strategy()}")
-
-def test_auto_game():
-    auto_game = AutoGame.create(["Mike", "Dan", "John"])
-    result = auto_game.start()
-    print(result)
-
-def test_simulate(n_times:int=10, print_sim:bool=False, wait:float|int=.1):
-    players = [
-        Player("Simple", strategy=Simple()),
-        Player("Simple17", strategy=Simple17())
-    ]
-
-    auto_game = AutoGame(players=players)
-    # auto_game = AutoGame.create(["Mike", "Dan", "John"])
-    results = auto_game.simulate(n_times=n_times, print_sim=print_sim, wait=wait)
-
-def _test_start():
+def test_start():
     players = [
         Player("Mike", chips=1000),
         # Player("Dan", chips=1000),
@@ -125,15 +93,40 @@ def _test_start():
 
     game = Game(players=players, min_bet=15)
 
-    max_n = game._get_player_max_name_len()
-
     game.start()
+
+def test_sim_start():
+    sim = Simulation(
+        players=[
+            Player("Mike",1000)
+        ],
+        min_bet=15
+    )
+
+    sim._start(is_print=True)
+
+def test_sim_run(n_times:int=1, print_sim:bool=True, wait:float=.01):
+    mike = Player("Mike",1000)
+    sim = Simulation(
+        players=[
+            mike
+        ],
+        min_bet=15
+    )
+
+    sim_results = sim.run(n_times=n_times, print_results=True, print_sim=print_sim, wait=wait)
     
+    sim_results.print()
+    # for player in sim_results.players:
+    #     print(player.chips - player.init_chips)
+
+    # print(sum(res.won for res in mike.results))
+
 
 if __name__ == "__main__":
     # test_is_blackjack()
     # test_split_hand()
-    # test_game()
+    test_game()
     # test_simulate(n_times=1000, print_sim=True, wait=.01)
     # player = Player("Mike", 100)
     # pseudo = PseudoPlayer("Mike1",parent=player, bet=player.bet)
@@ -142,4 +135,5 @@ if __name__ == "__main__":
     # test_input_bet()
     # test_pseudo_place_bet()
     # test_split_hand()
-    _test_start()
+    # test_sim_start()
+    # test_sim_run(n_times=10000, print_sim=False, wait=.1)

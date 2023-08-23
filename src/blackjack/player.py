@@ -1,49 +1,114 @@
 from __future__ import annotations
 from src.blackjack.deck import Card, Hand
 from escprint import esc
+from typing import NamedTuple
+
+HIT = "hit"
+STAY = "stay"
+INSURANCE = "insurance"
+DOUBLE_DOWN = "double down"
+SPLIT = "split"
 
 ### STRATEGY ###
 class Strategy:
-    def __init__(self) -> None:
-        pass
-    def run(self, player:Player, dealer:Dealer, ):
-        pass
+    log:list
+
+    def __init__(self, auto_log:bool=True) -> None:
+        self.auto_log = auto_log
+        self.log = []
+
+    def __decide_hands__(self, player:Player) -> int:
+        n_hands = self.decide_hands(player=player)
+        if self.auto_log:
+            self.log.append(f"hands -> {n_hands}")
+        if not isinstance(n_hands,int):
+            raise TypeError("Strategy decision for number of hands must be integer.")
+        if n_hands < 1:
+            raise ValueError("Strategy decision for number of hands must exceed 0")
+        
+        return n_hands
+        
+    def __decide_bet__(self, player:Player, min_bet:int=15) -> int:
+        bet = self.decide_bet(player=player)
+        if not isinstance(bet, int):
+            raise TypeError(f"Strategy bet decision must be integer")
+        if bet < min_bet:
+            raise ValueError(f"Strategy bet decision must be integer greater than min_bet ({min_bet})")
+        if self.auto_log:
+            self.log.append(f"bet -> {bet}")
+        return bet
+        
+    def __decide__(self, player:Player, choices:list[str], dealer:Dealer=None, players:list[Player]=[]) -> str:
+        decision = self.decide(
+            player=player,
+            choices=choices,
+            dealer=dealer,
+            players=players
+        )
+
+        decision = str.lower(decision)
+
+        if not isinstance(decision, str):
+            raise TypeError("Strategy decision must be of type str")
+        if decision not in choices:
+            raise ValueError(f"Straregy decision not in list of valid choices: {choices}")
+        
+        return decision
+        
+    def _reset_log(self) -> None:
+        self.log.clear()
+
+    def decide_hands(self, player:Player) -> int:
+        return 1
+    
+    def decide_bet(self, player:Player, min_bet:int=15) -> int:
+        return min_bet
+
+    def decide(self, player:Player, choices:list[str], dealer:Dealer=None, players:list[Player]=[]) -> str:
+        # possible choices = ["insurance","split","hit","stay","double down"]
+        return "stay"
 
 class Simple(Strategy):
-    def __init__(self) -> None:
-        super().__init__()
+    def decide_hands(self, player: Player) -> int:
+        return 1
     
-    def run(self, player:Player, players:list[Player]=[], dealer:Dealer=None) -> bool:
-        return player.hand_value() < 16 
+    def decide_bet(self, player: Player, min_bet: int = 15) -> int:
+        return min_bet
+
+    def decide(self, player:Player, choices:list[str], dealer:Dealer=None, players:list[Player]=[]) -> str:
+        return HIT if player.hand_value() < 16 else STAY
 
 class Simple17(Strategy):
-    def __init__(self) -> None:
-        super().__init__()
-    
-    def run(self, player:Player, players:list[Player]=[], dealer:Dealer=None) -> bool:
-        return player.hand_value() < 17 
+    def decide(self, player:Player, choices:list[str], dealer:Dealer=None, players:list[Player]=[]) -> str:
+        return HIT if player.hand_value() < 17 else STAY
 
 ### PLAYER ###
 class Player: 
     name:str
     strategy:Strategy
     hand:Hand
+    init_chips:int
     chips:int
     bet:int
     is_split:bool
     insurance:int
     pseudos:list[PseudoPlayer]
+    is_pseudo:bool
+    is_stayed:bool
+    results:list[PlayerResults]
 
-    def __init__(self, name:str, chips:int=0, strategy:Strategy=Simple()) -> None:
+    def __init__(self, name:str, chips:int=1000, strategy:Strategy=Simple()) -> None:
         self.name = name
         self.strategy = strategy
         self.hand = Hand()
+        self.init_chips = chips
         self.chips = chips
         self.bet = 0
         self.insurance = 0
         self.pseudos = []
         self.is_pseudo = False
         self.is_stayed = False
+        self.results = []
     
     def hit(self, card:Card) -> bool:
         self.hand.add(card)
@@ -96,6 +161,9 @@ class Player:
                 stayed_check
             )
         else:
+            print_style = "red" if (self.is_bust() or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else "Green/bold"
+            print_strike = "strike" if (self.is_bust() or (dealer_hand_value == 21 and len(dealer.hand) == 2)) else ""
+
             esc.printf(
                 (self.name, print_style, print_strike, "underline"), 
                 (post_str,print_style)," ... ", (bet_str, print_style, "underline/dim"),
@@ -127,23 +195,6 @@ class Player:
         self.insurance = bet
         self.chips -= bet
 
-    def input_bet(self, min_bet:int=15) -> int:
-        esc.printf(
-            f"{self.name} (", [f"${self.chips}", "Green/underline"], 
-            f") What is your bet? ", (f"defualt = ${min_bet}","dim")  
-        )
-
-        bet_amount = (
-            esc.input("$", input="Green", end="")
-        )
-
-        if bet_amount == "":
-            bet_amount = min_bet
-        else:
-            bet_amount = int(bet_amount)
-
-        return bet_amount
-
     def get_init_round_inputs(self, min_bet:int=15) -> None:
         esc.printf(
             f"{self.name}, How many hands? ", ("default = 1", "dim")  
@@ -152,7 +203,8 @@ class Player:
         hand_amount = (
             esc.input("#", input="Green", end="")
         )
-        if not hand_amount.isdigit():
+        
+        if not hand_amount.isdigit() and hand_amount != "":
             esc.erase_screen(); esc.cursor_to_top()
             esc.print("Hand amount must be integer.","Red/italic")
             return self.get_init_round_inputs(min_bet=min_bet)
@@ -171,7 +223,7 @@ class Player:
             esc.input("$", input="Green", end="")
         )
                 
-        if not bet_amount.isdigit():
+        if not bet_amount.isdigit() and bet_amount != "":
             esc.erase_screen(); esc.cursor_to_top()
             esc.print("Bet amount must be integer.","Red/italic")
             return self.get_init_round_inputs(min_bet=min_bet)
@@ -205,10 +257,6 @@ class Player:
     def has_insurance(self) -> bool:
         return self.insurance > 0
 
-    def run_strategy(self, dealer:Dealer=None, players:list[Player]=[]):
-        other_players = list(filter(lambda player: player != self, players))
-        return self.strategy.run(player=self, players=other_players, dealer=dealer)
-
     def split_hand(self) -> None:
         # weed out bad calls
         if not self.can_split():
@@ -225,6 +273,13 @@ class Player:
         ]
         #
         # self.bet *= 2
+
+    def _handle_mult_hands(self, hand_amount:int, bet_amount:int) -> None:
+        if hand_amount > 1:
+            for i in range(hand_amount):
+                self.pseudos.append(
+                    PseudoPlayer(name=f"{self.name}", parent=self, bet=bet_amount)
+                )
 
 ### Pseudo PLAYER ###
 class PseudoPlayer(Player):
@@ -316,3 +371,23 @@ class Dealer(Player):
     
     def showing_ace(self) -> bool:
         return self.hand[0].rank == "Ace"
+    
+### PLAYER RESULTS
+class PlayerResults(NamedTuple):
+    player:Player
+    hands:int
+    won:int
+    pushed:int
+    busted:int
+    net:int
+
+class PlayerSimulationResults(NamedTuple):
+    player:Player
+    rounds:int
+    hands:int
+    won:int
+    pushed:int
+    busted:int
+    net:int
+    win_rate:float
+    
