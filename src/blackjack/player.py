@@ -108,6 +108,7 @@ class Player:
         self.bet = 0
         self.insurance = 0
         self.is_stayed = False
+        self.pseudos = []
 
     def place_bet(self, bet_amount:int, min_bet:int=15) -> int:
         if self.chips < bet_amount:
@@ -140,17 +141,7 @@ class Player:
             bet_amount = min_bet
         else:
             bet_amount = int(bet_amount)
-        
-        # bet_placed = self.place_bet(bet_amount=bet_amount, min_bet=min_bet)
 
-        if bet_amount > self.chips or min_bet > bet_amount:
-            esc.erase_prev(n=4)
-            if min_bet > bet_amount == -1:
-                esc.print(f"Bet amount (${bet_amount}) lower than Min Bet (${min_bet})", "red")
-            elif bet_amount > self.chips == -2:
-                esc.print(f"Insufficient Chips (${self.chips}) to cover bet (${bet_amount})","red")
-            return self.input_bet(min_bet=min_bet)
-        
         return bet_amount
 
     def get_init_round_inputs(self, min_bet:int=15) -> None:
@@ -161,13 +152,44 @@ class Player:
         hand_amount = (
             esc.input("#", input="Green", end="")
         )
+        if not hand_amount.isdigit():
+            esc.erase_screen(); esc.cursor_to_top()
+            esc.print("Hand amount must be integer.","Red/italic")
+            return self.get_init_round_inputs(min_bet=min_bet)
 
         if hand_amount == "":
             hand_amount = 1
         else:
             hand_amount = int(hand_amount)
 
-        bet_amount = self.input_bet()
+        esc.printf(
+            f"{self.name} (", [f"${self.chips}", "Green/underline"], 
+            f") What is your bet? ", (f"defualt = ${min_bet}","dim")  
+        )
+
+        bet_amount = (
+            esc.input("$", input="Green", end="")
+        )
+                
+        if not bet_amount.isdigit():
+            esc.erase_screen(); esc.cursor_to_top()
+            esc.print("Bet amount must be integer.","Red/italic")
+            return self.get_init_round_inputs(min_bet=min_bet)
+
+        if bet_amount == "":
+            bet_amount = min_bet
+        else:
+            bet_amount = int(bet_amount)
+
+
+        if (hand_amount * bet_amount > self.chips):
+            esc.erase_screen(); esc.cursor_to_top()
+            esc.print("Bet * Hand Amt. greater than chip count","Red/italic")
+            return self.get_init_round_inputs(min_bet=min_bet)
+        if (bet_amount < min_bet):
+            esc.erase_screen(); esc.cursor_to_top()
+            esc.print("Bet amount lower than Min Bet.","Red/italic")
+            return self.get_init_round_inputs(min_bet=min_bet)
 
         if hand_amount > 1:
             for i in range(hand_amount):
@@ -194,12 +216,15 @@ class Player:
         # rest
         (hand1,hand2) = self.hand.split()
 
+        bet = self.bet
+        self.bet = 0
+
         self.pseudos = [
-            PseudoPlayer(self.name, parent=self, bet=self.bet, hand=hand1),
-            PseudoPlayer(self.name, parent=self, bet=self.bet, hand=hand2)
+            PseudoPlayer(self.name, parent=self, bet=bet, hand=hand1),
+            PseudoPlayer(self.name, parent=self, bet=bet, hand=hand2)
         ]
         #
-        self.bet *= 2
+        # self.bet *= 2
 
 ### Pseudo PLAYER ###
 class PseudoPlayer(Player):
@@ -248,6 +273,8 @@ class PseudoPlayer(Player):
         return self.bet
 
     def split_hand(self):
+        bet = self.bet
+        self.bet = 0
         # weed out bad calls
         if not self.can_split():
             return
@@ -255,9 +282,9 @@ class PseudoPlayer(Player):
         (hand1,hand2) = self.hand.split()
         index = self.parent.pseudos.index(self)
         self.parent.pseudos.pop(index)
-        self.parent.pseudos.insert(index, PseudoPlayer(self.name, parent=self.parent, bet=self.bet, hand=hand1))
-        self.parent.pseudos.insert(index+1,  PseudoPlayer(self.name, parent=self.parent, bet=self.bet, hand=hand2))
-        self.parent.bet += self.bet
+        self.parent.pseudos.insert(index, PseudoPlayer(self.name, parent=self.parent, bet=bet, hand=hand1))
+        self.parent.pseudos.insert(index+1,  PseudoPlayer(self.name, parent=self.parent, bet=bet, hand=hand2))
+        # self.parent.bet += self.bet
 
 class Dealer(Player):
     def __init__(self, strategy:Strategy=Simple17()) -> None:

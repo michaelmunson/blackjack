@@ -14,11 +14,12 @@ class Game:
     min_bet:int
     log: Log
 
-    def __init__(self, players:list[Player], dealer:Dealer=Dealer(), deck:Deck=Deck(shuffle=True, num_decks=8), min_bet:int=15) -> None:
+    def __init__(self, players:list[Player], dealer:Dealer=Dealer(), deck:Deck=Deck(shuffle=True, num_decks=8), min_bet:int=15, hit_on_soft_17=False) -> None:
         self.players = players
         self.dealer = dealer
         self.deck = deck
         self.min_bet = min_bet
+        self.hit_on_soft_17 = hit_on_soft_17
         self.log = Log()
 
     def hit_player(self,player:Player) -> bool:
@@ -31,11 +32,7 @@ class Game:
     def add_player(self,player:Player) -> None:
         self.players.append(player)
 
-    def reset(self) -> None:
-        [player.reset() for player in self.players]
-        self.dealer.reset()
-
-    def play(self) -> GameResults:
+    def start(self) -> GameResults:
         # init screen
         esc.enable_alt_buffer(); esc.cursor_to_top()
         try:
@@ -45,13 +42,22 @@ class Game:
             self._start_init_hit_round()
             # start decision round
             self._start_player_decision_round()
+            # start dealer hit round
+            self._start_dealer_hit_round()
             # handle game end
-            self._handle_results()
-            input()
+            game_results = self._get_results()
+            # print results
+            self._print_game_state(dealer=self.dealer,game_results=game_results, )
+            # play again?
+            if self._is_play_again():
+                self._restart_game()
 
         # end round, disable screen
         finally:
             esc.disable_alt_buffer()
+            self._print_exit()
+        
+        return game_results
 
     def _start_bet_round(self) -> None:
         for player in self.players:
@@ -63,14 +69,14 @@ class Game:
             for player in self.players:
                 if player.has_pseudos():
                     for pseudo in player.pseudos:
-                        # pseudo.hand.add("6")
+                        # pseudo.hit(Card("9"))
                         self.hit_player(player=pseudo)
                 else:
-                    # player.hand.add("6")
+                    # player.hit(Card("9"))
                     self.hit_player(player=player)
 
             self.hit_player(player=self.dealer)
-            # self.dealer.hit(Card("Ace"))
+            # self.dealer.hit(Card("9"))
 
     def _start_player_decision_round(self) -> None:
         self._print_game_state()
@@ -151,7 +157,7 @@ class Game:
 
         return player_inp
     
-    def _handle_player_decision(self, player:Player, decision:str):
+    def _handle_player_decision(self, player:Player, decision:str) -> None:
         decision = str.lower(decision)
         # STAY
         if decision in ["s","stay", ""]:
@@ -179,10 +185,18 @@ class Game:
         player.is_stayed = True
         if player.is_bust():
             self.log.add(f"{player.name} has busted", "red/italic")
-             
-    def _handle_results(self) -> None:
-        dealer_value = self.dealer.hand_value()
 
+    def _start_dealer_hit_round(self) -> None:
+        if self.hit_on_soft_17:
+            while self.dealer.lowest_hand_value() < 17:
+                self.hit_player(player=self.dealer)
+        else:
+            while self.dealer.hand_value() < 17:
+                self.hit_player(player=self.dealer)
+    
+    def _get_results(self) -> GameResults:
+        dealer_value = self.dealer.hand_value()
+        game_results = GameResults()
         for player in self.players:
             p_res_dict = {
                 "player":player,
@@ -195,6 +209,7 @@ class Game:
             # multiple / split hands
             if player.has_pseudos():
                 for pseudo in player.pseudos:
+                    p_res_dict["hands"] += 1
                     if pseudo.has_insurance():
                         if self.dealer.has_blackjack():
                             player.chips += (2*pseudo.insurance)
@@ -205,6 +220,12 @@ class Game:
                     if pseudo.is_bust():
                         p_res_dict["busted"] += 1
                         p_res_dict["net"] -= pseudo.bet
+
+                    
+                    elif self.dealer.is_bust():
+                        p_res_dict["won"] += 1
+                        player.chips += (pseudo.bet * 2)
+                        p_res_dict["net"] += pseudo.bet
                     
                     elif self.dealer.has_blackjack():
                         if pseudo.has_blackjack():
@@ -217,20 +238,21 @@ class Game:
                         player.chips += (pseudo.bet * 1.5)
                         p_res_dict["net"] += (pseudo.bet * 1.5)
                     
-                    elif pseudo.hand_value() > dealer_value:
+                    elif pseudo.hand_value() == self.dealer.hand_value():
+                        p_res_dict["pushed"] += 1
+                        player.chips += pseudo.bet
+                    
+                    elif pseudo.hand_value() > self.dealer.hand_value():
                         p_res_dict["won"] += 1
                         player.chips += (pseudo.bet * 2)
                         p_res_dict["net"] += (pseudo.bet * 2)
                     
-                    elif player.hand_value() == dealer_value:
-                        p_res_dict["pushed"] += 1
-                        player.chips += pseudo.bet
-                    
-                    elif player.hand_value() < dealer_value:
+                    elif player.hand_value() < self.dealer.hand_value():
                         p_res_dict["net"] -= pseudo.bet
             # 1 hand
             else:
                 p_res_dict["hands"] = 1
+
                 if player.has_insurance():
                     if self.dealer.has_blackjack():
                         player.chips += (2*player.insurance)
@@ -241,6 +263,11 @@ class Game:
                 if player.is_bust():
                     p_res_dict["busted"] += 1
                     p_res_dict["net"] -= player.bet
+
+                elif self.dealer.is_bust():
+                    p_res_dict["won"] += 1
+                    player.chips += (player.bet * 2)
+                    p_res_dict["net"] += player.bet
                 
                 elif self.dealer.has_blackjack():
                     if player.has_blackjack():
@@ -252,32 +279,32 @@ class Game:
                     p_res_dict["won"] += 1
                     player.chips += (player.bet * 1.5)
                     p_res_dict["net"] += (player.bet * 1.5)
+                                
+                elif player.hand_value() == self.dealer.hand_value():
+                    p_res_dict["pushed"] += 1
+                    player.chips += player.bet
                 
-                elif player.hand_value() > dealer_value:
+                elif player.hand_value() > self.dealer.hand_value():
                     p_res_dict["won"] += 1
                     player.chips += (player.bet * 2)
                     p_res_dict["net"] += (player.bet * 2)
                 
-                elif player.hand_value() == dealer_value:
-                    p_res_dict["pushed"] += 1
-                    player.chips += player.bet
-                
-                elif player.hand_value() < dealer_value:
+                elif player.hand_value() < self.dealer.hand_value():
                     p_res_dict["net"] -= player.bet
 
-
-    def _payout_player(self,player:Player, rate:float=2) -> int:
-        payout = round(player.bet * rate)
-        player.chips += payout
-        player.bet = 0
-        self.log.add(f"{player.name} paid out ${payout}", "Green/italic")
-        return payout
+            game_results.add(PlayerResults(**p_res_dict))
+        return game_results
 
     def _is_play_again(self) -> bool:
         return str.lower(input("Play again? (Y/n) \n> ")) != "n"
     
+    def _reset(self) -> None:
+        [player.reset() for player in self.players]
+        self.dealer.reset()
+
     def _restart_game(self) -> GameResults:
         esc.erase_screen()
+        self._reset()
         return self.start()
 
     def _get_player_max_name_len(self) -> int:
@@ -292,7 +319,7 @@ class Game:
                     max_len = len(player.name)
         return max_len
 
-    def _print_game_state(self, current_player:Player=None, reset:bool=True, dealer:Dealer=None) -> None:
+    def _print_game_state(self, current_player:Player=None, reset:bool=True, dealer:Dealer=None, game_results:GameResults=None) -> None:
         hide_dealer = (dealer == None)
         if reset:
             esc.erase_screen()
@@ -307,8 +334,16 @@ class Game:
             #     esc.set("dim")
             player.print(max_name_len=mxnmlen, dealer=dealer)
             print()
-
+        if game_results:
+            game_results.print()
         # self.log.print()
+        print()
+
+    def _print_exit(self) -> None:
+        for player in self.players:
+            esc.printf(
+                (player.name,"Magenta"), " ended with ",(f"${player.chips}","Magenta"),
+            )
         print()
 
     def _is_all_players_bust(self) -> bool:
@@ -426,7 +461,20 @@ class GameResults(list[PlayerResults]):
         super().__init__()
     def add(self, player_res:PlayerResults) -> None:
         return self.append(player_res)
-    # def get(self, )
+    def print(self) -> None:
+        for result in self:
+            # print(result.net)
+            net = (f"+(${result.net})","Green") if result.net >= 0 else (f"-(${abs(result.net)})","Red")
+            _and = " with " if result.pushed > 0 else ""
+            pushed = (f"{result.pushed}","Magenta") if result.pushed > 0 else ""
+            plshands = " hands pushed." if result.pushed > 0 else ""
+            esc.printf(
+                (f"{result.player.name} ","Magenta"), net, ": ",(f"{result.won}","Magenta"), "/",(f"{result.hands}","Magenta"), " hands won", _and, pushed, plshands
+            )
+### SIMULATION RESULTS
+class SimResults(list[GameResults]):
+    def __init__(self) -> None:
+        pass
 
 ### LOG
 class Log(list[tuple[str,str]]):
@@ -444,3 +492,7 @@ class Log(list[tuple[str,str]]):
     def print(self):
         for item in self:
             esc.print('~ ' + item[0], item[1])
+
+class Config(NamedTuple):
+    hit_on_soft_17:bool = False
+

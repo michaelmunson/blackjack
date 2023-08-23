@@ -127,12 +127,8 @@ def _test_start():
 
     max_n = game._get_player_max_name_len()
 
-    game.play()
-
-    for player in players:
-        player.print(max_name_len=max_n)
-
-
+    game.start()
+    
 
 if __name__ == "__main__":
     # test_is_blackjack()
