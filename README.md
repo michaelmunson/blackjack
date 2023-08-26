@@ -1,10 +1,9 @@
 # BlackJack
 Python library for playing/simulating Black Jack games. 
-Create strategies and simulate them. 
+Create strategies and simulate them. Inspired by and with help from Daniel Tarrant.
 
 ## Usage
 ### Playing a Game
-There are two ways to play a game
 ```python
 from src.blackjack.game import Game
 from src.blackjack.player import Player, Dealer
@@ -27,7 +26,6 @@ game = Game(
 )
 
 game.start()
-
 ```
 
 ### Simulating Games
