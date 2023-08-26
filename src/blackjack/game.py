@@ -381,13 +381,12 @@ class Game:
         ]
         return Game(players=players)
 
-
 ### SIMULATION
 class Simulation(Game):
     def __init__(self, players: list[Player], deck:Deck = Deck(shuffle=True, num_decks=8), min_bet:int = 15, hit_on_soft_17:bool=False) -> None:
         super().__init__(players, deck, min_bet, hit_on_soft_17)
     
-    def run(self, n_times:int=1, print_results:bool=True, print_sim:bool=False, wait:float=.01) -> SimulationResults:
+    def run(self, n_times:int=1, print_sim:bool=False, wait:float=.01) -> SimulationResults:
         start_time = time()
 
         if print_sim:
@@ -410,7 +409,7 @@ class Simulation(Game):
         
         
         results = SimulationResults(players=self.players+self.out_players, n_times=n_times, time_elapsed=time_elapsed)
-
+        
         return results
 
     def _start(self, print_sim:bool=False) -> GameResults:
@@ -555,7 +554,6 @@ class SimulationResults(dict[str,PlayerSimulationResults]):
             esc.printf(
                 (f"{name}", "Magenta"), " won ",(f"{round(res.win_rate * 100, 2)}%", rate_sty), " of the time with net chip earnings = ",(f"{res.net}",net_sty),
             )
-
 
 ### LOG
 class Log(list[tuple[str,str]]):

@@ -40,7 +40,6 @@ class Card:
     def is_suit(suit:str) -> bool:
         return str.lower(suit) in ['hearts','diamonds','clubs','spades', '❤️', '♦️', '♣︎', '♠︎'] 
 
-
 class Hand(list[Card]):
     bet:int
     

@@ -72,10 +72,23 @@ def test_pseudo_place_bet():
 
 # OTHER
 def test_game():
-    game = Game.create([
-        ("Mike",),
-        ("Dan",)
-    ])
+    players = [
+        Player("Mike", chips=1000),
+        Player("Dan", chips=1000)
+    ]
+
+    dealer = Dealer()
+
+    deck = Deck(shuffle=True, num_decks=8)
+
+    game = Game(
+        players=players, 
+        dealer=dealer,
+        deck=deck, 
+        min_bet=15,
+        hit_on_soft_17=True
+    )
+
     game.start()
 
 def test_print():
@@ -106,7 +119,7 @@ def test_sim_start():
     sim._start(is_print=True)
 
 def test_sim_run(n_times:int=1, print_sim:bool=True, wait:float=.01):
-    mike = Player("Mike",1000)
+    mike = Player("Mike",10000)
     sim = Simulation(
         players=[
             mike
@@ -126,8 +139,8 @@ def test_sim_run(n_times:int=1, print_sim:bool=True, wait:float=.01):
 if __name__ == "__main__":
     # test_is_blackjack()
     # test_split_hand()
-    test_game()
-    # test_simulate(n_times=1000, print_sim=True, wait=.01)
+    # test_game()
+    test_sim_run(n_times=1000, print_sim=True, wait=.01)
     # player = Player("Mike", 100)
     # pseudo = PseudoPlayer("Mike1",parent=player, bet=player.bet)
     # pseudo.hit(Card("5"))

@@ -12,10 +12,13 @@ SPLIT = "split"
 ### STRATEGY ###
 class Strategy:
     log:list
+    auto_log:bool
+    state: list
 
     def __init__(self, auto_log:bool=True) -> None:
         self.auto_log = auto_log
         self.log = []
+        self.state = []
 
     def __decide_hands__(self, player:Player) -> int:
         n_hands = self.decide_hands(player=player)
@@ -66,7 +69,7 @@ class Strategy:
 
     def decide(self, player:Player, choices:list[str], dealer:Dealer=None, players:list[Player]=[]) -> str:
         # possible choices = ["insurance","split","hit","stay","double down"]
-        return "stay"
+        return STAY
 
 class Simple(Strategy):
     def decide_hands(self, player: Player) -> int:
