@@ -145,7 +145,7 @@ sim = Simulation(
     min_bet=15
 )
 
-sim_results = sim.run(n_times=n_times)
+sim_results = sim.run(n_times=10000)
 
 sim_results.print()
 
