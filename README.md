@@ -49,7 +49,7 @@ or, if you want to see the results in real time
 ```python
 # set print_sim to True
 # set a wait time (float value), this sets the time it takes between rounds. 
-sim_results = sim.run(n_times=1000, print_results=True, print_sim=True, wait=.01)
+sim_results = sim.run(n_times=1000, print_sim=True, wait=.01)
 ```
 
 #### Simulation Results
