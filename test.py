@@ -1,9 +1,58 @@
 from src.blackjack.game import Game, Simple, Player, Dealer, Simulation
 from src.blackjack.deck import Deck, Card, Hand
-from src.blackjack.player import Simple, Simple17, PseudoPlayer
+from src.blackjack.player import Simple, Simple17, PseudoPlayer, Strategy, INSURANCE, SPLIT, STAY, HIT, DOUBLE_DOWN
+from random import randint
 from escprint import esc
 from typing import TypedDict, NamedTuple
 import typing
+
+class MoreComplex(Strategy):
+    # randomly decide between 1 and 2 hands
+    def decide_hands(self, player):
+        # include these arguments, even if they're not used
+        return randint(1,2)
+    # if the player is net positive on chips, bet twice the amount
+    def decide_bet(self, player, min_bet):
+        # include these arguments, even if they're not used
+        if player.chips > player.init_chips:
+            return int(2 * min_bet)
+    #
+    def decide(self, player, choices, dealer, players):
+        # include these arguments, even if they're not used
+        player_val = player.hand_value()
+
+        if INSURANCE in choices:
+            return INSURANCE
+        
+        elif dealer.showing() in [4,5,6]:
+            return STAY
+        
+        elif SPLIT in choices:
+            return SPLIT
+
+        elif DOUBLE_DOWN in choices and player_val <= 13 and player_val >= 11:
+            return DOUBLE_DOWN
+
+        elif player_val < dealer.showing() + 10 and player_val < 16:
+            return HIT
+
+class CardCounting(Strategy):
+    # initialize state field
+    def init_state(self) -> None:
+        self.state = {
+            "Aces" : 0
+        }
+    # after round is over
+    def after(self, player, dealer, players):
+        if "Ace" in map(lambda card: card.rank, player.hand):
+            self.state["Aces"] += 1 
+        
+        for p in players:
+            if "Ace" in map(lambda card: card.rank, p.hand):
+                self.state["Aces"] += 1
+
+        if "Ace" in map(lambda card: card.rank, dealer.hand):
+            self.state["Aces"] += 1 
 
 print_tname = esc.create_fn("White")
 def _print_succ():
@@ -119,10 +168,11 @@ def test_sim_start():
     sim._start(is_print=True)
 
 def test_sim_run(n_times:int=1, print_sim:bool=True, wait:float=.01):
-    mike = Player("Mike",10000)
+    ccstrat = CardCounting()
     sim = Simulation(
         players=[
-            mike
+            Player("Mike",10000, strategy=MoreComplex()),
+            Player("Cheater",10000, strategy=ccstrat)
         ],
         min_bet=15
     )
@@ -130,6 +180,8 @@ def test_sim_run(n_times:int=1, print_sim:bool=True, wait:float=.01):
     sim_results = sim.run(n_times=n_times, print_sim=print_sim, wait=wait)
     
     sim_results.print()
+
+    print(ccstrat.state)
     # for player in sim_results.players:
     #     print(player.chips - player.init_chips)
 
@@ -140,7 +192,6 @@ if __name__ == "__main__":
     # test_is_blackjack()
     # test_split_hand()
     # test_game()
-    test_sim_run(n_times=1000, print_sim=True, wait=.01)
     # player = Player("Mike", 100)
     # pseudo = PseudoPlayer("Mike1",parent=player, bet=player.bet)
     # pseudo.hit(Card("5"))
@@ -150,3 +201,9 @@ if __name__ == "__main__":
     # test_split_hand()
     # test_sim_start()
     # test_sim_run(n_times=10000, print_sim=False, wait=.1)
+
+    test_sim_run(n_times=1000, print_sim=False, wait=.01)
+    # hand = Hand("King","King")
+    # print(hand)
+    # if "Ace" in map(lambda card: card.rank, hand):
+    #     print(True)

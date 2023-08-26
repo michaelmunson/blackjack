@@ -71,16 +71,20 @@ These results are derived from a list of **PlayerResults** instances. These can 
 To create the stragey, create a class that extends the **Strategy** class.
 
 The class can have 3 methods:
-
-1. **decide_hands**(self, player:Player) -> int ... (optional)
+1. **init_state**(self) -> None:
+* Used to initialize the state field to keep a player "memory". (example below)
+2. **decide_hands**(self, player:Player) -> int ... (optional)
 * This method takes a **player** as an argument, and returns the number of hands (integer) the player will play during that round.
 * If this method is excluded from your strategy class, the number of hands will default to 1.
-2. **decide_bet**(self,player:Player, min_bet:int) -> int ... (optional)
+* If this method returns None, the number of hands will default to 1. 
+3. **decide_bet**(self,player:Player, min_bet:int) -> int ... (optional)
 * This method takes a **player**, and the **min_bet** as an argument, and returns the amount the player will bet (integer) during that round.
 * If this method is excluded, the player bet will default to the minimum bet provided. (15 is the default)
-3. **decide**(self, player:Player, choices:list[str], dealer:Dealer, players:list[Player]) -> str ... (required)
+* If this method returns None, the player bet will default to the minimum bet provided.
+4. **decide**(self, player:Player, choices:list[str], dealer:Dealer, players:list[Player]) -> str ... (required)
 * This method takes as arguments a **player**, a list of available **choices** (ex. ["stay","hit","double down", "split", "insurance"]), a **dealer**, and a list of other **players**. 
 * The method returns a str, indicating which of the available choices the player should make. 
+* IF method returns None, the decision will be interpreted as STAY
 
 #### Examples
 
@@ -110,7 +114,7 @@ class MoreComplex(Strategy):
     def decide_bet(self, player, min_bet):
         # include these arguments, even if they're not used
         if player.chips > player.init_chips:
-            return 2 * min_bet
+            return int(2 * min_bet)
     #
     def decide(self, player, choices, dealer, players):
         # include these arguments, even if they're not used
@@ -119,17 +123,43 @@ class MoreComplex(Strategy):
         if INSURANCE in choices:
             return INSURANCE
         
-        elif [4,5,6] in dealer.showing():
+        elif dealer.showing() in [4,5,6]:
             return STAY
         
         elif SPLIT in choices:
             return SPLIT
 
-        elif player_val <= 13 and player_val >= 11:
+        elif DOUBLE_DOWN in choices and player_val <= 13 and player_val >= 11:
             return DOUBLE_DOWN
 
         elif player_val < dealer.showing() + 10 and player_val < 16:
             return HIT
+
+        return STAY
+```
+
+If you want to keep a "memory" of the previous games, use the Strategy.state field, in conjunction with the .init_state() method and the .after() method.
+```python
+from src.blackjack.player import Strategy
+
+class CardCounting(Strategy):
+    # initialize state field
+    def init_state(self) -> None:
+        self.state = {
+            "Aces" : 0
+        }
+    # after round is over
+    def after(self, player, dealer, players):
+        if "Ace" in map(lambda card: card.rank, player.hand):
+            self.state["Aces"] += 1 
+        
+        for p in players:
+            if "Ace" in map(lambda card: card.rank, p.hand):
+                self.state["Aces"] += 1
+
+        if "Ace" in map(lambda card: card.rank, dealer.hand):
+            self.state["Aces"] += 1 
+
 ```
 
 ### Using your Strategy
@@ -141,6 +171,7 @@ from path/to/strategy import MoreComplex
 sim = Simulation(
     players=[
         Player("Mike", chips=10000, strategy=MoreComplex()),
+        Player("Cheater", chips=10000, strategy=CardCounting())
     ],
     min_bet=15
 )
@@ -188,3 +219,36 @@ results:list[PlayerResults]
 
 * **.showing_ace**() -> bool
     * returns whether or not the dealer is showing an ace
+
+### Hand & Card Classes
+A Player instance has a field **hand**, which is an instance of the **Hand** class. 
+
+#### Hand
+The hand class is essentially a list of **Card** instances
+
+#### Card
+The Card class has two fields, **rank** and **suit**
+```python
+class Card(
+    rank: str,
+    suit: str,
+)
+```
+
+#### Example
+```python
+from src.blackjack.player import Player
+from src.blackjack.deck import Card, Hand
+
+mike = Player("Mike")
+hand = mike.hand
+
+hand.add(Card("Ace","Spades"))
+hand.add(Card("King", "Diamonds"))
+
+print(hand[0].rank) # -> Ace
+print(hand[0].suit) # -> Spades
+print(hand[0].value) # -> 11
+print(hand.value()) # -> 21
+
+```

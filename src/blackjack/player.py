@@ -13,15 +13,23 @@ SPLIT = "split"
 class Strategy:
     log:list
     auto_log:bool
-    state: list
+    state_log: list
+    state: dict
 
     def __init__(self, auto_log:bool=True) -> None:
         self.auto_log = auto_log
         self.log = []
-        self.state = []
+        self.state_log = []
+        self.state = {}
+        self.init_state()
+
+    def init_state(self):
+        self.state = {}
 
     def __decide_hands__(self, player:Player) -> int:
         n_hands = self.decide_hands(player=player)
+        if not n_hands:
+            n_hands = 1
         if self.auto_log:
             self.log.append(f"hands -> {n_hands}")
         if not isinstance(n_hands,int):
@@ -32,7 +40,9 @@ class Strategy:
         return n_hands
         
     def __decide_bet__(self, player:Player, min_bet:int=15) -> int:
-        bet = self.decide_bet(player=player)
+        bet = self.decide_bet(player=player, min_bet=min_bet)
+        if bet == None:
+            bet = min_bet
         if not isinstance(bet, int):
             raise TypeError(f"Strategy bet decision must be integer")
         if bet < min_bet:
@@ -49,6 +59,9 @@ class Strategy:
             players=players
         )
 
+        if not decision:
+            decision = STAY
+
         decision = str.lower(decision)
 
         if not isinstance(decision, str):
@@ -58,6 +71,9 @@ class Strategy:
         
         return decision
         
+    def __after__(self, player:Player, dealer:Dealer=None, players:list[Player]=[]) -> None:
+        return self.after(player=player, dealer=dealer, players=players)
+
     def _reset_log(self) -> None:
         self.log.clear()
 
@@ -71,7 +87,15 @@ class Strategy:
         # possible choices = ["insurance","split","hit","stay","double down"]
         return STAY
 
+    def after(self, player:Player, dealer:Dealer=None, players:list[Player]=[]) -> None:
+        pass
+
 class Simple(Strategy):
+    def init_state(self):
+        self.state = {
+            "Aces" : 0
+        }
+
     def decide_hands(self, player: Player) -> int:
         return 1
     

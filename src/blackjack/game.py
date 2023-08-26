@@ -427,6 +427,8 @@ class Simulation(Game):
         if print_sim:
             self._print_game_state(dealer=self.dealer, reset=False)
         
+        self._handle_post_game_strat()
+
         results = self._get_results()
         if print_sim:
             results.print()
@@ -508,6 +510,10 @@ class Simulation(Game):
         
         return valid_inps
         
+    def _handle_post_game_strat(self) -> None:
+        for player in self.players:
+            players = list(filter(lambda p: p != player, self.players))
+            player.strategy.__after__(player=player, players=players, dealer=self.dealer)
 ### GAME RESULTS
 class GameResults(list[PlayerResults]):
     def __init__(self) -> None:
@@ -553,6 +559,7 @@ class SimulationResults(dict[str,PlayerSimulationResults]):
             esc.printf(
                 (f"{name}", "Magenta"), " won ",(f"{round(res.win_rate * 100, 2)}%", rate_sty), " of the time with net chip earnings = ",(f"{res.net}",net_sty),
             )
+            print()
 
 ### LOG
 class Log(list[tuple[str,str]]):
