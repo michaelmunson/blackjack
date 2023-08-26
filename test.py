@@ -127,7 +127,7 @@ def test_sim_run(n_times:int=1, print_sim:bool=True, wait:float=.01):
         min_bet=15
     )
 
-    sim_results = sim.run(n_times=n_times, print_results=True, print_sim=print_sim, wait=wait)
+    sim_results = sim.run(n_times=n_times, print_sim=print_sim, wait=wait)
     
     sim_results.print()
     # for player in sim_results.players:

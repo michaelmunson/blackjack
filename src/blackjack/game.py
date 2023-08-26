@@ -407,7 +407,6 @@ class Simulation(Game):
         if print_sim:
             esc.disable_alt_buffer()
         
-        
         results = SimulationResults(players=self.players+self.out_players, n_times=n_times, time_elapsed=time_elapsed)
         
         return results

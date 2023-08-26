@@ -43,7 +43,7 @@ sim = Simulation(
     min_bet=15
 )
 
-sim_results = sim.run(n_times=1000, print_results=True)
+sim_results = sim.run(n_times=1000)
 
 sim_results.print()
 ```
@@ -147,7 +147,7 @@ sim = Simulation(
     min_bet=15
 )
 
-sim_results = sim.run(n_times=n_times, print_results=True, print_sim=False)
+sim_results = sim.run(n_times=n_times)
 
 sim_results.print()
 
