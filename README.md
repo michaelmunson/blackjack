@@ -70,18 +70,20 @@ These results are derived from a list of **PlayerResults** instances. These can 
 
 To create the stragey, create a class that extends the **Strategy** class.
 
-The class can have 3 methods:
+The class can have 5 methods:
 1. **init_state**(self) -> None:
 * Used to initialize the state field to keep a player "memory". (example below)
-2. **decide_hands**(self, player:Player) -> int ... (optional)
+2. **after**(self) -> None:
+* Used to update the players memory of what had happened that round. (example below)
+3. **decide_hands**(self, player:Player) -> int ... (optional)
 * This method takes a **player** as an argument, and returns the number of hands (integer) the player will play during that round.
 * If this method is excluded from your strategy class, the number of hands will default to 1.
 * If this method returns None, the number of hands will default to 1. 
-3. **decide_bet**(self,player:Player, min_bet:int) -> int ... (optional)
+4. **decide_bet**(self,player:Player, min_bet:int) -> int ... (optional)
 * This method takes a **player**, and the **min_bet** as an argument, and returns the amount the player will bet (integer) during that round.
 * If this method is excluded, the player bet will default to the minimum bet provided. (15 is the default)
 * If this method returns None, the player bet will default to the minimum bet provided.
-4. **decide**(self, player:Player, choices:list[str], dealer:Dealer, players:list[Player]) -> str ... (required)
+5. **decide**(self, player:Player, choices:list[str], dealer:Dealer, players:list[Player]) -> str ... (required)
 * This method takes as arguments a **player**, a list of available **choices** (ex. ["stay","hit","double down", "split", "insurance"]), a **dealer**, and a list of other **players**. 
 * The method returns a str, indicating which of the available choices the player should make. 
 * IF method returns None, the decision will be interpreted as STAY
