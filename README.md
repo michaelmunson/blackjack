@@ -71,9 +71,9 @@ These results are derived from a list of **PlayerResults** instances. These can 
 To create the stragey, create a class that extends the **Strategy** class.
 
 The class can have 5 methods:
-1. **init_state**(self) -> None:
+1. **init_state**(self) -> None ... (optional)
 * Used to initialize the state field to keep a player "memory". (example below)
-2. **after**(self) -> None:
+2. **after**(self) -> None ... (optional)
 * Used to update the players memory of what had happened that round. (example below)
 3. **decide_hands**(self, player:Player) -> int ... (optional)
 * This method takes a **player** as an argument, and returns the number of hands (integer) the player will play during that round.
