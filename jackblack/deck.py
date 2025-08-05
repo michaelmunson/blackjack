@@ -2,6 +2,7 @@ from __future__ import annotations
 import random
 from typing import NamedTuple
 
+
 class Card:
     SYM_MAP = {
         "hearts" : "❤️",

@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: jackblack
-Version: 0.3.0
+Version: 0.4.0
 Summary: A Python library for playing and simulating Black Jack games with customizable strategies
 Home-page: https://github.com/michaelmunson/blackjack
 Author: Michael Munson

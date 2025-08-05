@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="jackblack",
-    version="0.3.0",
+    version="0.4.0",
     author="Michael Munson",
     author_email="munson.s.michael@gmail.com",
     description="A Python library for playing and simulating Black Jack games with customizable strategies",
