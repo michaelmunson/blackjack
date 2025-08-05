@@ -3,8 +3,8 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "twenty-won"
-version = "0.1.0"
+name = "twentywon"
+version = "0.2.0"
 description = "A Python library for playing and simulating Black Jack games with customizable strategies"
 readme = "README.md"
 license = "MIT"
@@ -60,4 +60,4 @@ target-version = ['py38']
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = "-v --cov=blackjack --cov-report=term-missing" 
+addopts = "" 

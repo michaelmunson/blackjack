@@ -1,5 +1,5 @@
 import pytest
-from blackjack.game import Game, Simulation
+from .game import Game, Simulation
 from blackjack.player import Player, Simple
 from blackjack.deck import Deck
 

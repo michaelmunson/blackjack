@@ -4,16 +4,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="twenty-won",
-    version="0.1.0",
+    name="twentywon",
+    version="0.2.0",
     author="Michael Munson",
     author_email="munson.s.michael@gmail.com",
     description="A Python library for playing and simulating Black Jack games with customizable strategies",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/michaelmunson/blackjack",
-    packages=find_packages(where="blackjack"),
-    package_dir={"": "blackjack"},
+    packages=find_packages(where="twentywon"),
+    package_dir={"": "twentywon"},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -43,7 +43,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "blackjack=blackjack.cli:main",
+            "twentywon=twentywon.cli:main",
         ],
     },
 ) 
