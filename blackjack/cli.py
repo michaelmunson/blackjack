@@ -5,7 +5,7 @@ Command-line interface for the BlackJack simulator.
 
 import argparse
 import sys
-from .game import Simulation
+from .game import Simulation, Game
 from .player import Player, Simple, Simple17
 
 def main():
@@ -47,6 +47,11 @@ def main():
         action="store_true",
         help="Show simulation progress"
     )
+    parser.add_argument(
+        "--interactive", 
+        action="store_true",
+        help="Play a single interactive game instead of running simulations"
+    )
 
     args = parser.parse_args()
 
@@ -63,12 +68,17 @@ def main():
         for name in args.players
     ]
 
-    # Run simulation
-    sim = Simulation(players=players, min_bet=args.min_bet)
-    results = sim.run(n_times=args.rounds, print_sim=args.verbose)
-    
-    # Print results
-    results.print()
+    if args.interactive:
+        # Play interactive game
+        game = Game(players=players, min_bet=args.min_bet)
+        game.start()
+    else:
+        # Run simulation
+        sim = Simulation(players=players, min_bet=args.min_bet)
+        results = sim.run(n_times=args.rounds, print_sim=args.verbose)
+        
+        # Print results
+        results.print()
 
 if __name__ == "__main__":
     main() 
