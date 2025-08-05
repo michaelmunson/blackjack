@@ -3,22 +3,21 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "blackjack-simulator"
+name = "twenty-won"
 version = "0.1.0"
 description = "A Python library for playing and simulating Black Jack games with customizable strategies"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Michael Munson", email = "munson.s.michael@gmail.com"}
 ]
 maintainers = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "Michael Munson", email = "munson.s.michael@gmail.com"}
 ]
 keywords = ["blackjack", "simulation", "game", "strategy", "casino"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -32,6 +31,7 @@ classifiers = [
 requires-python = ">=3.8"
 dependencies = [
     "escprint",
+    "argparse"
 ]
 
 [project.optional-dependencies]
@@ -46,12 +46,12 @@ dev = [
 blackjack = "blackjack.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/blackjack"
-Repository = "https://github.com/yourusername/blackjack"
-Issues = "https://github.com/yourusername/blackjack/issues"
+Homepage = "https://github.com/michaelmunson/blackjack"
+Repository = "https://github.com/michaelmunson/blackjack"
+Issues = "https://github.com/michaelmunson/blackjack/issues"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["blackjack"]
 
 [tool.black]
 line-length = 88

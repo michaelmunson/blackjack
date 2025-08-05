@@ -1,0 +1,14 @@
+LICENSE
+MANIFEST.in
+README.md
+pyproject.toml
+setup.py
+blackjack/twenty_won.egg-info/PKG-INFO
+blackjack/twenty_won.egg-info/SOURCES.txt
+blackjack/twenty_won.egg-info/dependency_links.txt
+blackjack/twenty_won.egg-info/entry_points.txt
+blackjack/twenty_won.egg-info/requires.txt
+blackjack/twenty_won.egg-info/top_level.txt
+tests/__init__.py
+tests/test.py
+tests/test_game.py

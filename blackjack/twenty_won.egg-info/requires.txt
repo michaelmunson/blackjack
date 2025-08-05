@@ -1,0 +1,8 @@
+escprint
+argparse
+
+[dev]
+pytest
+pytest-cov
+black
+flake8

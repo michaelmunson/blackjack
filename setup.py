@@ -4,16 +4,16 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="blackjack-simulator",
+    name="twenty-won",
     version="0.1.0",
-    author="Your Name",
-    author_email="your.email@example.com",
+    author="Michael Munson",
+    author_email="munson.s.michael@gmail.com",
     description="A Python library for playing and simulating Black Jack games with customizable strategies",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/blackjack",
-    packages=find_packages(where="src"),
-    package_dir={"": "src"},
+    url="https://github.com/michaelmunson/blackjack",
+    packages=find_packages(where="blackjack"),
+    package_dir={"": "blackjack"},
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
@@ -30,7 +30,8 @@ setup(
     ],
     python_requires=">=3.8",
     install_requires=[
-        "escprint",  # Add any other dependencies your project needs
+        "escprint",
+        "argparse",
     ],
     extras_require={
         "dev": [
