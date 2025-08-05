@@ -1,2 +1,2 @@
 [console_scripts]
-blackjack = blackjack.cli:main
+jackblack = jackblack.cli:main
