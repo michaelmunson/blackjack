@@ -1,6 +1,6 @@
 from __future__ import annotations
-from src.blackjack.deck import Deck, Hand, Card
-from src.blackjack.player import Player, Dealer, Simple, PlayerResults, PlayerSimulationResults
+from .deck import Deck, Hand, Card
+from .player import Player, Dealer, Simple, PlayerResults, PlayerSimulationResults
 from escprint import esc
 from collections import namedtuple
 from time import sleep, time

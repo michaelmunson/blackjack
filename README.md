@@ -1,256 +1,311 @@
-# BlackJack
-Python library for playing/simulating Black Jack games. 
-Create strategies and simulate them. Inspired by and with help from Daniel Tarrant.
+# BlackJack Simulator
 
-## Usage
-### Playing a Game
+A comprehensive Python library for playing and simulating Black Jack games with customizable strategies. Perfect for learning the game, testing strategies, or running statistical analysis.
+
+## Features
+
+- 🎮 **Interactive Game Mode**: Play Black Jack with a beautiful terminal interface
+- 📊 **Simulation Mode**: Run thousands of games to test strategies and analyze performance
+- 🧠 **Customizable Strategies**: Implement your own betting and decision strategies
+- 🃏 **Multiple Deck Support**: Configurable number of decks (1-8)
+- 💰 **Betting System**: Support for insurance, double down, and split hands
+- 📈 **Detailed Statistics**: Track wins, losses, win rates, and profit/loss
+- 🎯 **Strategy Analysis**: Compare different strategies side-by-side
+
+## Installation
+
+### From PyPI (Coming Soon)
+```bash
+pip install blackjack-simulator
+```
+
+### From Source
+```bash
+git clone https://github.com/yourusername/blackjack.git
+cd blackjack
+pip install -e .
+```
+
+## Quick Start
+
+### Command Line Interface
+
+Run a quick simulation with default settings:
+```bash
+blackjack --rounds 1000 --strategy simple
+```
+
+Run an interactive game:
+```bash
+python -m blackjack.cli --interactive
+```
+
+### Python API
+
 ```python
-from src.blackjack.game import Game
-from src.blackjack.player import Player, Dealer
+from blackjack import Game, Player, Simple, Simulation
 
+# Create players with strategies
+player1 = Player("Alice", chips=1000, strategy=Simple())
+player2 = Player("Bob", chips=1000, strategy=Simple())
+
+# Play an interactive game
+game = Game([player1, player2])
+results = game.start()
+
+# Run a simulation
+sim = Simulation([player1, player2])
+results = sim.run(n_times=1000)
+results.print()
+```
+
+## Usage Examples
+
+### Basic Game Setup
+
+```python
+from blackjack import Game, Player, Simple
+
+# Create players
 players = [
-    Player("Mike", chips=1000),
-    Player("Dan", chips=1000)
+    Player("Player1", chips=1000, strategy=Simple()),
+    Player("Player2", chips=1000, strategy=Simple())
 ]
 
-dealer = Dealer()
-
-deck = Deck(shuffle=True, num_decks=8)
-
-game = Game(
-    players=players, 
-    dealer=dealer,
-    deck=deck, 
-    min_bet=15,
-    hit_on_soft_17=True
-)
-
-game.start()
+# Create and start game
+game = Game(players=players, min_bet=15)
+results = game.start()
 ```
 
-### Simulating Games
-```python
-from src.blackjack.game import Simulation
-from src.blackjack.player import Player, Simple
-
-sim = Simulation(
-    players=[
-        Player("Mike", chips=10000, strategy=Simple()),
-        Player("Dan", chips=10000, strategy=Simple())
-    ],
-    min_bet=15
-)
-
-sim_results = sim.run(n_times=1000)
-
-sim_results.print()
-```
-or, if you want to see the results in real time
-```python
-# set print_sim to True
-# set a wait time (float value), this sets the time it takes between rounds. 
-sim_results = sim.run(n_times=1000, print_sim=True, wait=.01)
-```
-
-#### Simulation Results
-**Simulation.run** returns a dict, whose [key,value] pairs are [player.name, PlayerSimulationResults]. The class PlayerSimulationResults is a NamedTuple class of the following fields:
-```python
-player:Player
-rounds:int
-hands:int
-won:int
-pushed:int
-busted:int
-net:int
-win_rate:float
-```
-These results are derived from a list of **PlayerResults** instances. These can be found @ player.results
-
-### Creating a Strategy
-
-To create the stragey, create a class that extends the **Strategy** class.
-
-The class can have 5 methods:
-1. **init_state**(self) -> None ... (optional)
-* Used to initialize the state field to keep a player "memory". (example below)
-2. **after**(self) -> None ... (optional)
-* Used to update the players memory of what had happened that round. (example below)
-3. **decide_hands**(self, player:Player) -> int ... (optional)
-* This method takes a **player** as an argument, and returns the number of hands (integer) the player will play during that round.
-* If this method is excluded from your strategy class, the number of hands will default to 1.
-* If this method returns None, the number of hands will default to 1. 
-4. **decide_bet**(self,player:Player, min_bet:int) -> int ... (optional)
-* This method takes a **player**, and the **min_bet** as an argument, and returns the amount the player will bet (integer) during that round.
-* If this method is excluded, the player bet will default to the minimum bet provided. (15 is the default)
-* If this method returns None, the player bet will default to the minimum bet provided.
-5. **decide**(self, player:Player, choices:list[str], dealer:Dealer, players:list[Player]) -> str ... (required)
-* This method takes as arguments a **player**, a list of available **choices** (ex. ["stay","hit","double down", "split", "insurance"]), a **dealer**, and a list of other **players**. 
-* The method returns a str, indicating which of the available choices the player should make. 
-* IF method returns None, the decision will be interpreted as STAY
-
-#### Examples
-
-Here is an example of the default strategy (Simple) that all simulated players have, unless another is specified. This strategy simply hits if the players hand value is lower than 16. 
+### Custom Strategy Implementation
 
 ```python
-from src.blackjack.player import Player, Strategy, STAY, HIT
+from blackjack import Strategy, Player, HIT, STAY
 
-class Simple(Strategy):
-    # include these arguments, even if they're not used
-    def decide(self, player, choices, dealer, players):
-        return HIT if player.hand_value() < 16 else STAY
-```
-
-Here is a more complex example.
-
-```python
-from random import randint 
-from src.blackjack.player import Player, Strategy, STAY, HIT, INSURANCE, DOUBLE_DOWN, SPLIT
-
-class MoreComplex(Strategy):
-    # randomly decide between 1 and 2 hands
-    def decide_hands(self, player):
-        # include these arguments, even if they're not used
-        return randint(1,2)
-    # if the player is net positive on chips, bet twice the amount
-    def decide_bet(self, player, min_bet):
-        # include these arguments, even if they're not used
-        if player.chips > player.init_chips:
-            return int(2 * min_bet)
-    #
-    def decide(self, player, choices, dealer, players):
-        # include these arguments, even if they're not used
-        player_val = player.hand_value()
-
-        if INSURANCE in choices:
-            return INSURANCE
-        
-        elif dealer.showing() in [4,5,6]:
-            return STAY
-        
-        elif SPLIT in choices:
-            return SPLIT
-
-        elif DOUBLE_DOWN in choices and player_val <= 13 and player_val >= 11:
-            return DOUBLE_DOWN
-
-        elif player_val < dealer.showing() + 10 and player_val < 16:
+class MyStrategy(Strategy):
+    def decide(self, player, choices, dealer=None, players=None):
+        # Basic strategy: hit on 16 or less, stay on 17+
+        if player.hand_value() <= 16:
             return HIT
-
         return STAY
+    
+    def decide_bet(self, player, min_bet=15):
+        # Bet 5% of chips, minimum bet
+        bet = max(min_bet, player.chips // 20)
+        return min(bet, player.chips)
+
+# Use custom strategy
+player = Player("CustomPlayer", chips=1000, strategy=MyStrategy())
 ```
 
-If you want to keep a "memory" of the previous games, use the Strategy.state field, in conjunction with the .init_state() method and the .after() method.
+### Running Simulations
+
 ```python
-from src.blackjack.player import Strategy
+from blackjack import Simulation, Player, Simple, Simple17
 
-class CardCounting(Strategy):
-    # initialize state field
-    def init_state(self) -> None:
-        self.state = {
-            "Aces" : 0
-        }
-    # after round is over
-    def after(self, player, dealer, players):
-        if "Ace" in map(lambda card: card.rank, player.hand):
-            self.state["Aces"] += 1 
-        
-        for p in players:
-            if "Ace" in map(lambda card: card.rank, p.hand):
-                self.state["Aces"] += 1
+# Compare strategies
+simple_players = [Player(f"Simple{i}", chips=1000, strategy=Simple()) for i in range(3)]
+simple17_players = [Player(f"Simple17_{i}", chips=1000, strategy=Simple17()) for i in range(3)]
 
-        if "Ace" in map(lambda card: card.rank, dealer.hand):
-            self.state["Aces"] += 1 
+# Run simulations
+sim1 = Simulation(simple_players)
+sim2 = Simulation(simple17_players)
 
+results1 = sim1.run(n_times=10000)
+results2 = sim2.run(n_times=10000)
+
+print("Simple Strategy Results:")
+results1.print()
+print("\nSimple17 Strategy Results:")
+results2.print()
 ```
 
-### Using your Strategy
+## API Reference
+
+### Core Classes
+
+#### `Game`
+Main game controller for interactive play.
+
 ```python
-from src.blackjack.game import Simulation
-from src.blackjack.player import Player
-from path/to/strategy import MoreComplex
-
-sim = Simulation(
-    players=[
-        Player("Mike", chips=10000, strategy=MoreComplex()),
-        Player("Cheater", chips=10000, strategy=CardCounting())
-    ],
-    min_bet=15
-)
-
-sim_results = sim.run(n_times=10000)
-
-sim_results.print()
-
+Game(players, deck=None, min_bet=15, hit_on_soft_17=False)
 ```
 
-### *Useful* Player Fields & Methods
-### Fields
-```python 
-# players hand
-hand:Hand
-# amount of chips the player started with
-init_chips:int
-# amount of chips player has now
-chips:int
-# current bet amount
-bet:int
-# current insurance amount
-insurance:int
-# list of PlayerResults 
-results:list[PlayerResults]
-```
-#### Methods
+**Parameters:**
+- `players`: List of Player objects
+- `deck`: Deck object (default: 8-deck shuffled)
+- `min_bet`: Minimum bet amount (default: 15)
+- `hit_on_soft_17`: Whether dealer hits on soft 17 (default: False)
 
-* **.has_blackjack**() -> bool
-    * returns whether or not the player has blackjack
+**Methods:**
+- `start()`: Start interactive game
+- `add_player(player)`: Add player to game
 
-* **.can_split**() -> bool
-    * returns whether the player can split their hand
+#### `Simulation`
+Game controller optimized for running multiple games quickly.
 
-* **.hand_value**() -> int
-    * returns the highest value of the players hand that is still playable. Meaning if the Player has [King, Ace], it will return 21, but if the player has [King, Ace, 3], it will return 14.
-
-* **.lowest_hand_value**() -> int
-    * returns the lowest possible hand value. Essentially turns all aces into 1.
-
-### *Useful* Dealer Fields & Methods
-
-* **.showing**() -> int
-    * returns the value (integer) of the visible card the dealer is showing
-
-* **.showing_ace**() -> bool
-    * returns whether or not the dealer is showing an ace
-
-### Hand & Card Classes
-A Player instance has a field **hand**, which is an instance of the **Hand** class. 
-
-#### Hand
-The hand class is essentially a list of **Card** instances
-
-#### Card
-The Card class has two fields, **rank** and **suit**
 ```python
-class Card(
-    rank: str,
-    suit: str,
-)
+Simulation(players, deck=None, min_bet=15, hit_on_soft_17=False)
 ```
 
-#### Example
+**Methods:**
+- `run(n_times=1, print_sim=False, wait=0.01)`: Run simulation
+- `start()`: Run single game (non-interactive)
+
+#### `Player`
+Represents a player in the game.
+
 ```python
-from src.blackjack.player import Player
-from src.blackjack.deck import Card, Hand
-
-mike = Player("Mike")
-hand = mike.hand
-
-hand.add(Card("Ace","Spades"))
-hand.add(Card("King", "Diamonds"))
-
-print(hand[0].rank) # -> Ace
-print(hand[0].suit) # -> Spades
-print(hand[0].value) # -> 11
-print(hand.value()) # -> 21
-
+Player(name, chips=1000, strategy=Simple())
 ```
+
+**Parameters:**
+- `name`: Player name
+- `chips`: Starting chip count
+- `strategy`: Strategy object for decisions
+
+**Properties:**
+- `hand`: Current hand
+- `chips`: Current chip count
+- `bet`: Current bet amount
+- `hand_value()`: Current hand value
+- `is_bust()`: Check if busted
+- `has_blackjack()`: Check for blackjack
+
+#### `Dealer`
+Specialized Player class for the dealer.
+
+```python
+Dealer(strategy=Simple17())
+```
+
+**Methods:**
+- `showing()`: Value of visible card
+- `showing_ace()`: Check if showing ace
+
+### Strategy System
+
+#### Base Strategy Class
+```python
+class Strategy:
+    def decide(self, player, choices, dealer=None, players=None) -> str
+    def decide_bet(self, player, min_bet=15) -> int
+    def decide_hands(self, player) -> int
+    def after(self, player, dealer=None, players=None) -> None
+```
+
+#### Built-in Strategies
+
+- **`Simple`**: Basic hit/stand strategy
+- **`Simple17`**: Dealer strategy (hit on soft 17)
+
+### Deck and Cards
+
+#### `Deck`
+```python
+Deck(shuffle=True, num_decks=8)
+```
+
+**Methods:**
+- `deal()`: Deal one card
+- `shuffle()`: Shuffle deck
+- `reset()`: Reset and shuffle deck
+
+#### `Card`
+```python
+Card(rank, suit="spades")
+```
+
+**Valid Ranks:** Ace, 2-10, Jack, Queen, King
+**Valid Suits:** hearts, diamonds, clubs, spades
+
+#### `Hand`
+```python
+Hand(*cards, bet=0)
+```
+
+**Methods:**
+- `value()`: Calculate hand value
+- `is_bust()`: Check if busted
+- `is_blackjack()`: Check for blackjack
+- `split()`: Split hand into two
+
+## Game Rules
+
+This implementation follows standard casino Black Jack rules:
+
+- **Objective**: Beat the dealer by getting closer to 21 without going over
+- **Card Values**: 
+  - 2-10: Face value
+  - Jack, Queen, King: 10
+  - Ace: 1 or 11 (soft/hard)
+- **Actions**:
+  - **Hit**: Take another card
+  - **Stay**: Keep current hand
+  - **Double Down**: Double bet, take one card
+  - **Split**: Split pair into two hands
+  - **Insurance**: Bet against dealer blackjack
+- **Dealer Rules**: Hit on 16 or less, stay on 17+ (configurable for soft 17)
+
+## Command Line Options
+
+```bash
+blackjack [OPTIONS]
+
+Options:
+  --players TEXT...     Player names (default: Player1 Player2)
+  --chips INTEGER       Starting chips per player (default: 1000)
+  --rounds INTEGER      Number of rounds to simulate (default: 1000)
+  --min-bet INTEGER     Minimum bet (default: 15)
+  --strategy TEXT       Strategy to use: simple, simple17 (default: simple)
+  --verbose             Show simulation progress
+  --help                Show help message
+```
+
+## Development
+
+### Setup Development Environment
+
+```bash
+git clone https://github.com/yourusername/blackjack.git
+cd blackjack
+pip install -e ".[dev]"
+```
+
+### Running Tests
+
+```bash
+pytest
+```
+
+### Code Formatting
+
+```bash
+black .
+flake8 .
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run the test suite
+6. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with Python 3.8+
+- Uses [escprint](https://pypi.org/project/escprint/) for terminal formatting
+- Inspired by casino Black Jack games
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/blackjack/issues)
+- **Documentation**: [GitHub Wiki](https://github.com/yourusername/blackjack/wiki)
+- **Email**: your.email@example.com

@@ -1,5 +1,5 @@
 from __future__ import annotations
-from src.blackjack.deck import Card, Hand
+from .deck import Card, Hand
 from escprint import esc
 from typing import NamedTuple
 

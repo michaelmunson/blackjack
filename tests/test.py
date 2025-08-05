@@ -1,6 +1,6 @@
-from src.blackjack.game import Game, Simple, Player, Dealer, Simulation
-from src.blackjack.deck import Deck, Card, Hand
-from src.blackjack.player import Simple, Simple17, PseudoPlayer, Strategy, INSURANCE, SPLIT, STAY, HIT, DOUBLE_DOWN
+from blackjack.game import Game, Simple, Player, Dealer, Simulation
+from blackjack.deck import Deck, Card, Hand
+from blackjack.player import Simple, Simple17, PseudoPlayer, Strategy, INSURANCE, SPLIT, STAY, HIT, DOUBLE_DOWN
 from random import randint
 from escprint import esc
 from typing import TypedDict, NamedTuple
