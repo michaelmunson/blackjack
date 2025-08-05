@@ -1,4 +1,4 @@
-# twentywon
+# jackblack
 
 A comprehensive Python library for playing and simulating Black Jack games with customizable strategies. Perfect for learning the game, testing strategies, or running statistical analysis.
 
@@ -16,13 +16,13 @@ A comprehensive Python library for playing and simulating Black Jack games with 
 
 ### From PyPI (Coming Soon)
 ```bash
-pip install twentywon
+pip install jackblack
 ```
 
 ### From Source
 ```bash
 git clone https://github.com/michaelmunson/blackjack.git
-cd twentywon
+cd jackblack
 pip install -e .
 ```
 
@@ -32,18 +32,18 @@ pip install -e .
 
 Run a quick simulation with default settings:
 ```bash
-twentywon --rounds 1000 --strategy simple
+jackblack --rounds 1000 --strategy simple
 ```
 
 Run an interactive game:
 ```bash
-python -m twentywon.cli --interactive
+python -m jackblack.cli --interactive
 ```
 
 ### Python API
 
 ```python
-from twentywon import Game, Player, Simple, Simulation
+from jackblack import Game, Player, Simple, Simulation
 
 # Create players with strategies
 player1 = Player("Alice", chips=1000, strategy=Simple())
@@ -64,7 +64,7 @@ results.print()
 ### Basic Game Setup
 
 ```python
-from twentywon import Game, Player, Simple
+from jackblack import Game, Player, Simple
 
 # Create players
 players = [
@@ -80,7 +80,7 @@ results = game.start()
 ### Custom Strategy Implementation
 
 ```python
-from twentywon import Strategy, Player, HIT, STAY
+from jackblack import Strategy, Player, HIT, STAY
 
 class MyStrategy(Strategy):
     def decide(self, player, choices, dealer=None, players=None):
@@ -101,7 +101,7 @@ player = Player("CustomPlayer", chips=1000, strategy=MyStrategy())
 ### Running Simulations
 
 ```python
-from twentywon import Simulation, Player, Simple, Simple17
+from jackblack import Simulation, Player, Simple, Simple17
 
 # Compare strategies
 simple_players = [Player(f"Simple{i}", chips=1000, strategy=Simple()) for i in range(3)]
@@ -250,7 +250,7 @@ This implementation follows standard casino Black Jack rules:
 ## Command Line Options
 
 ```bash
-twentywon [OPTIONS]
+jackblack [OPTIONS]
 
 Options:
   --players TEXT...     Player names (default: Player1 Player2)
@@ -268,7 +268,7 @@ Options:
 
 ```bash
 git clone https://github.com/michaelmunson/blackjack.git
-cd twentywon
+cd jackblack
 pip install -e ".[dev]"
 ```
 
