@@ -14,6 +14,7 @@ jackblack.egg-info/PKG-INFO
 jackblack.egg-info/SOURCES.txt
 jackblack.egg-info/dependency_links.txt
 jackblack.egg-info/entry_points.txt
+jackblack.egg-info/requires.txt
 jackblack.egg-info/top_level.txt
 tests/__init__.py
 tests/test.py

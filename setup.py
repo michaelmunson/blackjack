@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="jackblack",
-    version="0.7.0",
+    version="0.8.0",
     author="Michael Munson",
     author_email="michaelmunsonm@gmail.com",
     description="A Blackjack simulator and strategy engine",
@@ -11,7 +11,10 @@ setup(
     url="https://github.com/michaelmunson/blackjack",
     packages=find_packages(),  # auto-discovers `jackblack`
     include_package_data=True,
-    install_requires=[],  # or read from requirements.txt
+    install_requires=[
+    "escprint==1.0.4",
+    "argparse==1.4.0",
+    ],  # or read from requirements.txt
     entry_points={
         "console_scripts": [
             "jackblack=jackblack.cli:main",  # if you want a CLI

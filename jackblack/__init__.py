@@ -4,7 +4,7 @@ BlackJack Simulator
 A Python library for playing and simulating Black Jack games with customizable strategies.
 """
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __author__ = "Michael Munson"
 __email__ = "michaelmunsonm@gmail.com"
 
