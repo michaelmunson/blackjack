@@ -1,41 +1,25 @@
 Metadata-Version: 2.4
 Name: jackblack
-Version: 0.6.0
-Summary: A Python library for playing and simulating Black Jack games with customizable strategies
+Version: 0.7.0
+Summary: A Blackjack simulator and strategy engine
 Home-page: https://github.com/michaelmunson/blackjack
 Author: Michael Munson
-Author-email: Michael Munson <munson.s.michael@gmail.com>
-Maintainer-email: Michael Munson <munson.s.michael@gmail.com>
-License-Expression: MIT
-Project-URL: Homepage, https://github.com/michaelmunson/blackjack
-Project-URL: Repository, https://github.com/michaelmunson/blackjack
-Project-URL: Issues, https://github.com/michaelmunson/blackjack/issues
-Keywords: blackjack,simulation,game,strategy,casino
-Classifier: Development Status :: 3 - Alpha
-Classifier: Intended Audience :: Developers
-Classifier: Operating System :: OS Independent
+Author-email: michaelmunsonm@gmail.com
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.8
-Classifier: Programming Language :: Python :: 3.9
-Classifier: Programming Language :: Python :: 3.10
-Classifier: Programming Language :: Python :: 3.11
-Classifier: Programming Language :: Python :: 3.12
-Classifier: Topic :: Games/Entertainment
-Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
-Requires-Python: >=3.8
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.7
 Description-Content-Type: text/markdown
 License-File: LICENSE
-Requires-Dist: escprint
-Requires-Dist: argparse
-Provides-Extra: dev
-Requires-Dist: pytest; extra == "dev"
-Requires-Dist: pytest-cov; extra == "dev"
-Requires-Dist: black; extra == "dev"
-Requires-Dist: flake8; extra == "dev"
 Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
 Dynamic: home-page
 Dynamic: license-file
 Dynamic: requires-python
+Dynamic: summary
 
 # jackblack
 

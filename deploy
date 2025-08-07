@@ -1,8 +1,20 @@
 #!/bin/bash
 
-rm -rf dist
+{
+    rm -rf dist
+    rm -rf jackblack/jackblack.egg-info
+} || {
+    echo "Error: Failed to clean build directories."
+}
 
-VERSION=$(python3 -c "import setup; print(setup.version)")
+VERSION=$(python3 -c "import jackblack; print(jackblack.__version__)")
+
+echo "Current version is: $VERSION"
+read -p "Have you updated the version in setup.py and __init__.py? (y/N): " confirm
+if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+    echo "Please update the version before deploying."
+    exit 1
+fi
 
 python3 -m build
 

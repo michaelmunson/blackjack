@@ -1,6 +1,6 @@
 include README.md
 include LICENSE
 include pyproject.toml
-recursive-include tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co] 
+include requirements.txt
+recursive-include jackblack *.py
+include jackblack/py.typed
